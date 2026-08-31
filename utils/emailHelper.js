@@ -6,13 +6,14 @@ const sendEmail = async (options) => {
         port: 587,
         secure: false, // Bắt buộc false đối với port 587
         auth: {
-            user: process.env.EMAIL_USER, // Sẽ nhận giá trị b73caf001@smtp-brevo.com từ Render
-            pass: process.env.EMAIL_PASS  // Sẽ nhận chuỗi SMTP Key dài từ Render
+            user: process.env.EMAIL_USER, // Vẫn giữ nguyên tài khoản Login Brevo (b73caf001@smtp-brevo.com)
+            pass: process.env.EMAIL_PASS  // Vẫn giữ nguyên SMTP Key từ Render
         }
     });
 
     const mailOptions = {
-        from: `"YOUTH SHOP" <${process.env.EMAIL_USER}>`,
+        // BẮT BUỘC ĐỂ EMAIL BẠN VỪA VERIFY TRÊN BREVO Ở ĐÂY ĐỂ TRÁNH BỊ CHẶN
+        from: `"YOUTH SHOP" <lek08670@gmail.com>`,
         to: options.email,
         subject: options.subject,
         html: options.html
