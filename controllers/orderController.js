@@ -78,39 +78,49 @@ const createOrder = async (req, res) => {
             isStockDeducted: false
         });
 
-        // GỬI EMAIL THÔNG BÁO CHO ADMIN
-        if (process.env.ADMIN_EMAIL && process.env.MAIL_USER) {
-            try {
-                const productListHtml = verifiedProducts.map(p => `<li>${p.productName} x ${p.quantity} - Giá: ${p.price.toLocaleString()} VNĐ</li>`).join('');
-                
-                await sendEmail({
-                    email: process.env.ADMIN_EMAIL,
-                    subject: `[YOUTH SHOP] Có đơn hàng mới - ${orderCode}`,
-                    html: `
-                        <h3>Có đơn hàng mới vừa được đặt!</h3>
-                        <p><strong>Mã đơn:</strong> ${orderCode}</p>
-                        <p><strong>Khách hàng:</strong> ${fullName}</p>
-                        <p><strong>Điện thoại:</strong> ${phone}</p>
-                        <p><strong>Địa chỉ:</strong> ${address}</p>
-                        <p><strong>Sản phẩm:</strong></p>
-                        <ul>${productListHtml}</ul>
-                        <p><strong>Tổng tiền:</strong> ${total.toLocaleString()} VNĐ</p>
-                    `
-                });
-            } catch (mailErr) {
-                console.error("Lỗi gửi email thông báo đơn hàng:", mailErr);
-            }
-        }
-
+        // PHẢN HỒI NGAY LẬP TỨC CHO KHÁCH HÀNG (tránh bị kẹt vòng quay "Đang gửi đơn...")
         res.status(201).json({
             success: true,
             message: 'Đặt hàng thành công',
             data: { orderCode: newOrder.orderCode, total: newOrder.total }
         });
 
+        // GỬI EMAIL THÔNG BÁO CHO ADMIN DƯỚI NỀN (BACKGROUND) KHÔNG LÀM ẢNH HƯỞNG ĐẾN USER
+        // Hỗ trợ kiểm tra linh hoạt cả EMAIL_USER hoặc MAIL_USER để tránh lỗi cấu hình biến môi trường
+        const adminMailTarget = process.env.ADMIN_EMAIL;
+        const senderMailTarget = process.env.EMAIL_USER || process.env.MAIL_USER;
+
+        if (adminMailTarget && senderMailTarget) {
+            const productListHtml = verifiedProducts.map(p => `<li>${p.productName} x ${p.quantity} - Giá: ${p.price.toLocaleString()} VNĐ</li>`).join('');
+            
+            sendEmail({
+                email: adminMailTarget,
+                subject: `[YOUTH SHOP] Có đơn hàng mới - ${orderCode}`,
+                html: `
+                    <h3>Có đơn hàng mới vừa được đặt!</h3>
+                    <p><strong>Mã đơn:</strong> ${orderCode}</p>
+                    <p><strong>Khách hàng:</strong> ${fullName}</p>
+                    <p><strong>Điện thoại:</strong> ${phone}</p>
+                    <p><strong>Địa chỉ:</strong> ${address}</p>
+                    <p><strong>Sản phẩm:</strong></p>
+                    <ul>${productListHtml}</ul>
+                    <p><strong>Tổng tiền:</strong> ${total.toLocaleString()} VNĐ</p>
+                `
+            }).then(() => {
+                console.log(`[EMAIL] Đã gửi thông báo đơn hàng ${orderCode} tới ${adminMailTarget}`);
+            }).catch(mailErr => {
+                console.error("[LỖI GỬI EMAIL TRÊN RENDER]:", mailErr);
+            });
+        } else {
+            console.log("[CẢNH BÁO]: Thiếu cấu hình biến môi trường ADMIN_EMAIL hoặc EMAIL_USER trên Render nên không gửi được email!");
+        }
+
     } catch (error) {
         console.error('Lỗi tạo đơn hàng:', error);
-        res.status(500).json({ success: false, message: 'Lỗi server nội bộ' });
+        // Kiểm tra nếu headers đã gửi rồi thì không response nữa
+        if (!res.headersSent) {
+            res.status(500).json({ success: false, message: 'Lỗi server nội bộ' });
+        }
     }
 };
 
