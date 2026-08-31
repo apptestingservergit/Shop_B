@@ -10,11 +10,14 @@ const orderSchema = new mongoose.Schema({
     email: { type: String }, // Có thể để trống
     note: { type: String },
     
+    // ---> THÊM TRƯỜNG LƯU KEY ĐĂNG NHẬP VÀO TRANG CỦA KHÁCH <---
+    loginKeyUsed: { type: String, default: 'Không rõ' },
+
     // Danh sách sản phẩm mua (LƯU SNAPSHOT để giữ nguyên giá khi Admin đổi giá sau này)
     products: [{
         productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
         productName: { type: String, required: true }, // Tên lúc mua
-        price: { type: Number, required: true },       // Giá lúc mua
+        price: { type: Number, required: true },      // Giá lúc mua
         quantity: { type: Number, required: true },    // Số lượng mua
         subtotal: { type: Number, required: true }     // Tổng tiền 1 món (giá x số lượng)
     }],

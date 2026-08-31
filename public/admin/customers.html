@@ -5,41 +5,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xếp hạng Khách hàng - Admin YOUTH SHOP</title>
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
     <style>
+        :root {
+            --sidebar-width: 260px;
+            --bg-body: #f8fafc;
+            --card-radius: 16px;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        }
+
         .sidebar {
-            width: 260px;
+            width: var(--sidebar-width);
             min-height: 100vh;
-            background: #111827;
+            background: #0f172a;
             color: white;
             position: fixed;
             top: 0;
             left: 0;
             z-index: 100;
             transition: transform 0.3s ease-in-out;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.05);
         }
 
         .sidebar a {
-            color: #9ca3af;
+            color: #94a3b8;
             text-decoration: none;
             padding: 12px 20px;
             display: block;
-            transition: var(--transition);
-            border-radius: 8px;
-            margin: 4px 12px;
+            transition: all 0.2s ease;
+            border-radius: 10px;
+            margin: 4px 16px;
+            font-weight: 500;
+            font-size: 0.95rem;
         }
 
         .sidebar a:hover,
         .sidebar a.active {
-            color: white;
-            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .main-content {
-            margin-left: 260px;
-            padding: 30px;
+            margin-left: var(--sidebar-width);
+            padding: 36px;
+        }
+
+        /* Enterprise Box Container */
+        .enterprise-box {
+            background: #ffffff;
+            border-radius: var(--card-radius);
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        /* Table custom */
+        .table-enterprise th {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 14px 16px;
+        }
+
+        .table-enterprise td {
+            font-size: 0.9rem;
+            color: #334155;
+            vertical-align: middle;
+            padding: 14px 16px;
         }
 
         .vip-badge {
@@ -48,18 +92,27 @@
             font-weight: bold;
         }
 
+        /* Style cho từ khóa tìm kiếm được tô vàng tinh tế */
+        .highlight-text {
+            background-color: #fef08a;
+            color: #854d0e;
+            padding: 0 2px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
         /* Responsive cho Mobile */
         @media (max-width: 991.98px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.show { transform: translateX(0); }
-            .main-content { margin-left: 0 !important; padding: 15px !important; }
+            .main-content { margin-left: 0 !important; padding: 20px !important; }
         }
     </style>
 </head>
 
-<body class="bg-light">
+<body>
 
-    <!-- MOBILE NAVBAR HEADER (Chỉ hiện trên điện thoại) -->
+    <!-- MOBILE NAVBAR HEADER -->
     <nav class="navbar navbar-dark bg-dark d-lg-none px-3 py-2">
         <button class="btn btn-outline-light btn-sm" onclick="toggleSidebar()">
             <i class="fa-solid fa-bars fs-5"></i>
@@ -74,10 +127,15 @@
             <h4 class="fw-bold tracking-wider mb-0 text-white">MENU</h4>
             <button class="btn text-white fs-4" onclick="toggleSidebar()">&times;</button>
         </div>
-        <h4 class="text-center fw-bold mb-4 tracking-wider d-none d-lg-block">ADMIN PANEL</h4>
+        <div class="px-4 mb-4">
+            <h4 class="fw-bold fs-5 tracking-wider mb-0 text-white"><i class="fa-solid fa-shield-halved text-primary me-2"></i> YOUTH PANEL</h4>
+        </div>
         <div class="flex-grow-1">
             <a href="/admin/dashboard.html"><i class="fa-solid fa-chart-pie me-2"></i> Dashboard</a>
-            <a href="/admin/orders.html"><i class="fa-solid fa-box-open me-2"></i> Quản lý Đơn hàng</a>
+            <a href="/admin/orders.html">
+                <i class="fa-solid fa-box-open me-2"></i> Quản lý Đơn hàng
+                <span id="pendingBadge" class="badge bg-danger float-end rounded-pill mt-1" style="display: none; font-size: 0.75rem;">0</span>
+            </a>
             <a href="/admin/products.html"><i class="fa-solid fa-shirt me-2"></i> Quản lý Sản phẩm</a>
             <a href="/admin/categories.html"><i class="fa-solid fa-list me-2"></i> Quản lý Danh mục</a>
             <a href="/admin/keys.html"><i class="fa-solid fa-key me-2"></i> Quản lý KEY</a>
@@ -86,20 +144,36 @@
             <a href="/admin/settings.html"><i class="fa-solid fa-gear me-2"></i> Cài đặt</a>
         </div>
         <div class="px-3 d-none d-lg-block">
-            <button class="btn btn-outline-danger w-100 btn-sm" onclick="adminLogout()"><i
-                    class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất</button>
+            <button class="btn btn-outline-danger w-100 btn-sm py-2 rounded-3" onclick="adminLogout()">
+                <i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất
+            </button>
         </div>
     </div>
 
     <!-- MAIN CONTENT -->
     <div class="main-content">
-        <h2 class="fw-bold mb-4 fs-4">Xếp hạng Khách hàng theo Doanh thu</h2>
-        <div class="youth-card p-3 p-md-4">
+        <!-- Header Title & Action -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2">
+            <div>
+                <h2 class="fw-bold mb-1 fs-3 text-dark">Xếp hạng Khách hàng theo Doanh thu</h2>
+                <p class="text-muted small mb-0">Theo dõi khách hàng thân thiết và đóng góp doanh thu lớn nhất</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <!-- Ô TÌM KIẾM NHANH -->
+                <div class="input-group shadow-sm" style="width: 280px;">
+                    <span class="input-group-text bg-white border-end-0 text-muted ps-3"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" id="searchCustomerInput" class="form-control border-start-0 ps-0 shadow-none" placeholder="Tìm tên, SĐT, địa chỉ..." onkeyup="handleSearch()">
+                </div>
+            </div>
+        </div>
+
+        <!-- BẢNG HIỂN THỊ DANH SÁCH KHÁCH HÀNG -->
+        <div class="enterprise-box">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
+                <table class="table table-enterprise align-middle mb-0">
+                    <thead>
                         <tr>
-                            <th>Thứ hạng</th>
+                            <th style="width: 100px;">Thứ hạng</th>
                             <th>Khách hàng</th>
                             <th>Số điện thoại</th>
                             <th>Tổng đơn hàng</th>
@@ -109,23 +183,66 @@
                     </thead>
                     <tbody id="customersTableBody">
                         <tr>
-                            <td colspan="6" class="text-center py-4">Đang tải dữ liệu...</td>
+                            <td colspan="6" class="text-center py-4 text-muted">Đang tải dữ liệu khách hàng...</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <!-- PHÂN TRANG (PAGINATION) -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top gap-3">
+                <div class="text-muted small" id="paginationInfo">Hiển thị 0 - 0 của 0 khách hàng</div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0" id="paginationContainer">
+                        <!-- Render nút phân trang tự động -->
+                    </ul>
+                </nav>
+            </div>
         </div>
     </div>
 
+    <!-- Bootstrap & SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        let allCustomersData = [];
+        let filteredCustomersData = [];
+        let currentPage = 1;
+        const rowsPerPage = 10; // Giới hạn đúng 10 khách hàng mỗi trang
+
         const formatMoney = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
         const checkAdminAuth = () => { if (!localStorage.getItem('ADMIN_TOKEN')) window.location.href = '/admin/login.html'; };
 
-        // Hàm bật/tắt Sidebar trên mobile
         const toggleSidebar = () => {
             document.getElementById('adminSidebar').classList.toggle('show');
+        };
+
+        // Hàm cập nhật real-time số lượng đơn chờ xử lý trên Sidebar
+        const updateGlobalPendingBadge = async () => {
+            try {
+                const token = localStorage.getItem('ADMIN_TOKEN');
+                if (!token) return;
+
+                const res = await fetch('/api/orders/admin/all', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+
+                if (result.success && Array.isArray(result.data)) {
+                    const pendingCount = result.data.filter(order => order.status === 'pending').length;
+                    const badgeEl = document.getElementById('pendingBadge');
+                    if (badgeEl) {
+                        if (pendingCount > 0) {
+                            badgeEl.innerText = pendingCount;
+                            badgeEl.style.display = 'inline-block';
+                        } else {
+                            badgeEl.style.display = 'none';
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Lỗi cập nhật badge:', err);
+            }
         };
 
         const loadCustomerRanking = async () => {
@@ -135,16 +252,9 @@
                 const result = await res.json();
 
                 if (result.success) {
-                    const tbody = document.getElementById('customersTableBody');
-                    if (result.data.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">Chưa có dữ liệu khách hàng.</td></tr>`;
-                        return;
-                    }
-
-                    // 1. Gom nhóm dữ liệu khách hàng theo số điện thoại
                     const customersMap = new Map();
                     result.data.forEach(order => {
-                        // QUAN TRỌNG: CHỈ XÉT CÁC ĐƠN HÀNG ĐÃ ĐẠT TRẠNG THÁI 'paid' (Đã thanh toán / Hoàn tất)
+                        // CHỈ XÉT CÁC ĐƠN HÀNG ĐÃ ĐẠT TRẠNG THÁI 'paid' (Đã thanh toán / Hoàn tất)
                         if (order.status === 'paid') {
                             if (!customersMap.has(order.phone)) {
                                 customersMap.set(order.phone, {
@@ -152,50 +262,140 @@
                                     phone: order.phone,
                                     email: order.email || 'Không có',
                                     address: order.address,
-                                    totalOrders: 0, // Số đơn hoàn tất
-                                    totalSpent: 0   // Tổng tiền đã thanh toán
+                                    totalOrders: 0,
+                                    totalSpent: 0
                                 });
                             }
 
                             const customer = customersMap.get(order.phone);
-                            customer.totalOrders += 1;          // Tăng đếm số đơn hoàn tất
-                            customer.totalSpent += order.total; // Cộng dồn tiền vào doanh thu xếp hạng
+                            customer.totalOrders += 1;
+                            customer.totalSpent += order.total;
                         }
                     });
 
-                    // Nếu không có khách nào có đơn hoàn tất
-                    if (customersMap.size === 0) {
-                        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">Chưa có đơn hàng nào hoàn tất (Đã thanh toán).</td></tr>`;
-                        return;
-                    }
-
-                    // 2. Sắp xếp khách hàng theo tổng tiền đã thanh toán giảm dần (Top doanh thu cao nhất)
-                    const sortedCustomers = Array.from(customersMap.values()).sort((a, b) => b.totalSpent - a.totalSpent);
-
-                    tbody.innerHTML = '';
-                    sortedCustomers.forEach((c, index) => {
-                        let rankBadge = `<span class="badge bg-secondary">Top ${index + 1}</span>`;
-                        if (index === 0) rankBadge = `<span class="badge vip-badge px-2 py-1"><i class="fa-solid fa-crown me-1"></i> TOP 1 VIP</span>`;
-                        else if (index === 1) rankBadge = `<span class="badge bg-warning text-dark px-2 py-1">TOP 2</span>`;
-                        else if (index === 2) rankBadge = `<span class="badge bg-info text-dark px-2 py-1">TOP 3</span>`;
-
-                        tbody.innerHTML += `
-                            <tr>
-                                <td>${rankBadge}</td>
-                                <td class="fw-bold">${c.fullName}</td>
-                                <td>${c.phone}</td>
-                                <td><span class="badge bg-dark">${c.totalOrders} đơn hoàn tất</span></td>
-                                <td class="fw-bold text-success fs-6">${formatMoney(c.totalSpent)}</td>
-                                <td class="text-muted text-truncate" style="max-width: 250px;" title="${c.address}">${c.address}</td>
-                            </tr>
-                        `;
-                    });
+                    // Sắp xếp giảm dần theo tổng tiền đã thanh toán
+                    allCustomersData = Array.from(customersMap.values()).sort((a, b) => b.totalSpent - a.totalSpent);
+                    applyFilterAndSearch();
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('customersTableBody').innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">Lỗi tải dữ liệu khách hàng từ server.</td></tr>`;
+            }
+        };
+
+        const handleSearch = () => {
+            currentPage = 1;
+            applyFilterAndSearch();
+        };
+
+        const highlightMatch = (text, keyword) => {
+            if (!text) return '';
+            if (!keyword) return text;
+            const escapedKeyword = keyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            const regex = new RegExp(`(${escapedKeyword})`, 'gi');
+            return text.replace(regex, '<span class="highlight-text">$1</span>');
+        };
+
+        const applyFilterAndSearch = () => {
+            const keyword = document.getElementById('searchCustomerInput').value.trim();
+            const lowerKeyword = keyword.toLowerCase();
+
+            let result = allCustomersData;
+            if (lowerKeyword) {
+                result = result.filter(c => 
+                    (c.fullName && c.fullName.toLowerCase().includes(lowerKeyword)) ||
+                    (c.phone && c.phone.toLowerCase().includes(lowerKeyword)) ||
+                    (c.address && c.address.toLowerCase().includes(lowerKeyword))
+                );
+            }
+
+            filteredCustomersData = result;
+            renderTableWithPagination(keyword);
+        };
+
+        const renderTableWithPagination = (keyword = '') => {
+            const tbody = document.getElementById('customersTableBody');
+            const totalItems = filteredCustomersData.length;
+
+            if (totalItems === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">Không tìm thấy khách hàng phù hợp.</td></tr>`;
+                document.getElementById('paginationInfo').innerText = `Hiển thị 0 - 0 của 0 khách hàng`;
+                document.getElementById('paginationContainer').innerHTML = '';
+                return;
+            }
+
+            const totalPages = Math.ceil(totalItems / rowsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const endIdx = startIdx + rowsPerPage;
+            const paginatedItems = filteredCustomersData.slice(startIdx, endIdx);
+
+            document.getElementById('paginationInfo').innerText = `Hiển thị ${startIdx + 1} - ${Math.min(endIdx, totalItems)} của ${totalItems} khách hàng`;
+
+            tbody.innerHTML = '';
+            paginatedItems.forEach((c, index) => {
+                const absoluteIndex = startIdx + index;
+                let rankBadge = `<span class="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1">Top ${absoluteIndex + 1}</span>`;
+                if (absoluteIndex === 0) rankBadge = `<span class="badge vip-badge px-2 py-1 shadow-sm"><i class="fa-solid fa-crown me-1"></i> TOP 1 VIP</span>`;
+                else if (absoluteIndex === 1) rankBadge = `<span class="badge bg-warning bg-opacity-10 text-warning text-dark px-2 py-1 fw-bold">TOP 2</span>`;
+                else if (absoluteIndex === 2) rankBadge = `<span class="badge bg-info bg-opacity-10 text-info text-dark px-2 py-1 fw-bold">TOP 3</span>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${rankBadge}</td>
+                        <td class="fw-semibold text-dark">${highlightMatch(c.fullName, keyword)}</td>
+                        <td><span class="font-monospace">${highlightMatch(c.phone, keyword)}</span></td>
+                        <td><span class="badge bg-dark bg-opacity-10 text-dark px-2 py-1">${c.totalOrders} đơn hoàn tất</span></td>
+                        <td class="fw-bold text-success fs-6">${formatMoney(c.totalSpent)}</td>
+                        <td class="text-muted text-truncate" style="max-width: 250px;" title="${c.address}">${highlightMatch(c.address, keyword)}</td>
+                    </tr>
+                `;
+            });
+
+            renderPaginationControls(totalPages);
+        };
+
+        const renderPaginationControls = (totalPages) => {
+            const paginationEl = document.getElementById('paginationContainer');
+            if (totalPages <= 1) {
+                paginationEl.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <button class="page-link" onclick="changePage(${currentPage - 1})">Trước</button>
+            </li>`;
+
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<li class="page-item ${currentPage === i ? 'active' : ''}">
+                    <button class="page-link" onclick="changePage(${i})">${i}</button>
+                </li>`;
+            }
+
+            html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <button class="page-link" onclick="changePage(${currentPage + 1})">Sau</button>
+            </li>`;
+
+            paginationEl.innerHTML = html;
+        };
+
+        const changePage = (page) => {
+            if (page < 1) return;
+            currentPage = page;
+            const keyword = document.getElementById('searchCustomerInput').value.trim();
+            renderTableWithPagination(keyword);
         };
 
         const adminLogout = () => { localStorage.removeItem('ADMIN_TOKEN'); window.location.href = '/admin/login.html'; };
-        document.addEventListener('DOMContentLoaded', () => { checkAdminAuth(); loadCustomerRanking(); });
+        
+        document.addEventListener('DOMContentLoaded', () => { 
+            checkAdminAuth(); 
+            loadCustomerRanking(); 
+            updateGlobalPendingBadge();
+            setInterval(updateGlobalPendingBadge, 10000);
+        });
     </script>
 </body>
 

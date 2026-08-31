@@ -4,93 +4,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YOUTH SHOP - Phong cách của bạn</title>
+    <title>YOUTH SHOP - Phong cách giới trẻ hiện đại</title>
 
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
 
     <style>
+        :root {
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+            --radius-card: 18px;
+            --transition-smooth: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: #f8fafc;
+            color: #0f172a;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Navbar Glassmorphism */
         .navbar-youth {
-            background-color: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: var(--shadow-sm);
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
         }
 
         .navbar-brand {
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: var(--primary-color) !important;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #0f172a !important;
+            font-size: 1.25rem;
         }
 
+        /* Hero Section nghệ thuật */
         .hero-section {
-            background: linear-gradient(135deg, #111827 0%, #374151 100%);
+            background: linear-gradient(135deg, #090d16 0%, #1e293b 100%);
             color: white;
-            padding: 80px 0;
-            border-radius: var(--radius-lg);
-            margin: 20px 0;
+            padding: 50px 24px;
+            border-radius: 24px;
+            margin: 16px 0 32px 0;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+            transform: rotate(30deg);
+            pointer-events: none;
+        }
+
+        /* Category Filter Tabs (Mobile Horizontal Scroll) */
+        .category-scroll-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 8px;
+            scrollbar-width: none; /* Firefox */
+        }
+
+        .category-scroll-container::-webkit-scrollbar {
+            display: none; /* Chrome, Safari */
+        }
+
+        .category-tab-btn {
+            border-radius: 50rem !important;
+            font-weight: 600;
+            font-size: 0.875rem;
+            padding: 8px 18px !important;
+            transition: var(--transition-smooth);
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #475569;
+        }
+
+        .category-tab-btn.active, .category-tab-btn:hover {
+            background-color: #0f172a !important;
+            color: #ffffff !important;
+            border-color: #0f172a !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+        }
+
+        /* Product Card Thẩm mỹ cao */
+        .youth-card {
+            background: #ffffff;
+            border-radius: var(--radius-card);
+            border: 1px solid #e2e8f0;
+            transition: var(--transition-smooth);
+            overflow: hidden;
+        }
+
+        .youth-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+            border-color: #cbd5e1;
         }
 
         .product-img-wrapper {
+            position: relative;
+            aspect-ratio: 1/1;
             overflow: hidden;
-            border-top-left-radius: var(--radius-lg);
-            border-top-right-radius: var(--radius-lg);
+            background-color: #f1f5f9;
         }
 
         .product-img {
             width: 100%;
-            height: 250px;
+            height: 100%;
             object-fit: cover;
-            transition: var(--transition);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .youth-card:hover .product-img {
-            transform: scale(1.05);
+            transform: scale(1.08);
         }
 
         .product-price {
             font-weight: 700;
-            color: var(--accent-color);
-            font-size: 1.1rem;
+            color: #0f172a;
+            font-size: 1.05rem;
         }
 
+        /* Sản phẩm hết hàng đẩy xuống cuối & mờ */
         .out-of-stock-card {
-            opacity: 0.65;
+            opacity: 0.6;
+            background-color: #f1f5f9;
         }
 
         .out-of-stock-img {
             filter: grayscale(100%);
         }
 
-        .stock-badge {
-            font-size: 0.8rem;
-            color: #4b5563;
+        /* Tối ưu hóa kích thước mobile */
+        @media (max-width: 767.98px) {
+            .hero-section {
+                padding: 36px 16px;
+                margin: 12px 0 24px 0;
+                border-radius: 16px;
+            }
+            .hero-section h1 {
+                font-size: 1.5rem !important;
+            }
+            .hero-section p {
+                font-size: 0.9rem !important;
+            }
+            .main-title {
+                font-size: 1.35rem !important;
+            }
         }
     </style>
 </head>
 
-<body class="bg-light d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100">
 
-    <!-- HEADER -->
-    <nav class="navbar navbar-expand-lg navbar-youth sticky-top py-3">
+    <!-- HEADER / NAVIGATION -->
+    <nav class="navbar navbar-expand-lg navbar-youth sticky-top py-2 py-lg-3">
         <div class="container">
-            <a class="navbar-brand" href="/index.html">YOUTH SHOP</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto">
-                    <li class="nav-item"><a class="nav-link active" href="/index.html">Trang chủ</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Sản phẩm</a></li>
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/index.html">
+                <i class="fa-solid fa-bolt text-warning"></i> YOUTH SHOP
+            </a>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/cart.html" class="position-relative text-dark text-decoration-none p-2">
+                    <i class="fa-solid fa-bag-shopping fs-5"></i>
+                    <span class="position-absolute top-25 start-75 translate-middle badge rounded-pill bg-danger" id="cartCount" style="font-size: 0.65rem;">0</span>
+                </a>
+                <button class="navbar-toggler border-0 shadow-none ps-1 pe-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <i class="fa-solid fa-bars-staggered fs-5 text-dark"></i>
+                </button>
+            </div>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-lg-center gap-lg-3 py-2 py-lg-0">
+                    <li class="nav-item"><a class="nav-link active fw-semibold" href="/index.html">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link text-muted" href="#">Sản phẩm</a></li>
+                    <li class="nav-item mt-2 mt-lg-0">
+                        <button class="btn btn-outline-danger btn-sm w-100 rounded-pill px-3" onclick="logout()">
+                            <i class="fa-solid fa-right-from-bracket me-1"></i> Thoát
+                        </button>
+                    </li>
                 </ul>
-                <div class="d-flex align-items-center gap-3">
-                    <a href="/cart.html" class="position-relative text-dark text-decoration-none">
-                        <i class="fa-solid fa-cart-shopping fs-5"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">0</span>
-                    </a>
-                    <button class="btn btn-outline-danger btn-sm ms-3" onclick="logout()">Thoát</button>
-                </div>
             </div>
         </div>
     </nav>
@@ -98,25 +203,29 @@
     <!-- HERO BANNER -->
     <div class="container">
         <div class="hero-section">
-            <h1 class="display-5 fw-bold mb-3">Định hình phong cách giới trẻ</h1>
-            <p class="lead mb-4">Sỉ lẻ liên hệ tele: @dichvucodegiare.</p>
-            <a href="#products" class="btn btn-primary btn-youth px-4 py-2">MUA NGAY</a>
+            <h1 class="display-6 fw-bold mb-2">Định hình phong cách giới trẻ</h1>
+            <p class="text-white-50 mb-4 small">Khám phá bộ sưu tập thời trang và phụ kiện chất lượng cao.</p>
+            <a href="#products" class="btn btn-light btn-sm rounded-pill fw-bold px-4 py-2 text-dark shadow-sm">
+                MUA NGAY <i class="fa-solid fa-arrow-down ms-1"></i>
+            </a>
         </div>
     </div>
 
     <!-- MAIN CONTENT -->
-    <div class="container my-5 flex-grow-1" id="products">
-        <h2 class="fw-bold mb-4">Sản phẩm nổi bật</h2>
-
-        <!-- THANH LỌC DANH MỤC (CATEGORY FILTER TABS) -->
-        <div class="d-flex flex-wrap gap-2 mb-4" id="categoryTabs">
-            <button class="btn btn-dark btn-sm rounded-pill px-3 active" onclick="filterByCategory('all', this)">Tất cả</button>
+    <div class="container mb-5 flex-grow-1" id="products">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h2 class="fw-bold fs-4 main-title mb-0">Sản phẩm nổi bật</h2>
         </div>
 
-        <!-- DANH SÁCH SẢN PHẨM -->
-        <div class="row g-4" id="productList">
+        <!-- THANH LỌC DANH MỤC CUỘN NGANG (MOBILE FRIENDLY) -->
+        <div class="category-scroll-container mb-4" id="categoryTabs">
+            <button class="btn category-tab-btn active" onclick="filterByCategory('all', this)">Tất cả</button>
+        </div>
+
+        <!-- DANH SÁCH SẢN PHẨM (2 CỘT TRÊN MOBILE, 3-4 CỘT TRÊN TABLET/PC) -->
+        <div class="row g-3 g-md-4" id="productList">
             <div class="col-12 text-center py-5">
-                <div class="spinner-border text-primary" role="status">
+                <div class="spinner-border text-dark spinner-border-sm" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
             </div>
@@ -125,13 +234,13 @@
 
     <!-- FOOTER -->
     <footer class="bg-white py-4 mt-auto border-top">
-        <div class="container text-center text-muted">
+        <div class="container text-center text-muted small">
             <p class="mb-0">&copy; 2026 YOUTH SHOP. All rights reserved.</p>
         </div>
     </footer>
 
     <!-- SCRIPTS -->
-     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/main.js"></script>
 </body>

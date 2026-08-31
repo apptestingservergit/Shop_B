@@ -1,6 +1,29 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
-const sendEmail = require('../utils/emailHelper');
+const Key = require('../models/Key'); 
+const sendEmail = async (options) => {
+    const apiKey = process.env.EMAIL_PASS;
+    if (!apiKey) throw new Error("Thiếu biến môi trường EMAIL_PASS");
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'api-key': apiKey
+        },
+        body: JSON.stringify({
+            sender: { name: "YOUTH SHOP", email: process.env.EMAIL_USER },
+            to: [{ email: options.email }],
+            subject: options.subject,
+            htmlContent: options.html
+        })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Lỗi gửi email');
+    return data;
+};
 
 // [USER] Tạo mã đơn hàng tự động
 const generateOrderCode = async () => {
@@ -21,7 +44,8 @@ const generateOrderCode = async () => {
 // [USER] Tạo đơn hàng mới
 const createOrder = async (req, res) => {
     try {
-        const { fullName, phone, email, address, note, items } = req.body;
+        // Hứng thêm loginKey từ phía client gửi lên
+        const { fullName, phone, email, address, note, items, loginKey } = req.body;
 
         if (!fullName || !phone || !address) {
             return res.status(400).json({ success: false, message: 'Vui lòng điền đầy đủ thông tin bắt buộc' });
@@ -30,6 +54,9 @@ const createOrder = async (req, res) => {
         if (!items || items.length === 0) {
             return res.status(400).json({ success: false, message: 'Giỏ hàng trống' });
         }
+
+        // Lấy key đăng nhập (ưu tiên từ body client gửi lên, nếu không có thì kiểm tra req.user, cuối cùng là mặc định)
+        let loginKeyUsed = loginKey || (req.user && (req.user.key || req.user.loginKey)) || 'Không có / Khách vãng lai';
 
         let verifiedProducts = [];
         let subtotal = 0;
@@ -71,6 +98,7 @@ const createOrder = async (req, res) => {
             email,
             address,
             note,
+            loginKeyUsed, // Lưu key vào đơn hàng thành công
             products: verifiedProducts,
             shippingFee,
             total,
@@ -78,17 +106,16 @@ const createOrder = async (req, res) => {
             isStockDeducted: false
         });
 
-        // PHẢN HỒI NGAY LẬP TỨC CHO KHÁCH HÀNG (tránh bị kẹt vòng quay "Đang gửi đơn...")
+        // Phản hồi ngay cho khách
         res.status(201).json({
             success: true,
             message: 'Đặt hàng thành công',
             data: { orderCode: newOrder.orderCode, total: newOrder.total }
         });
 
-        // GỬI EMAIL THÔNG BÁO CHO ADMIN DƯỚI NỀN (BACKGROUND) KHÔNG LÀM ẢNH HƯỞNG ĐẾN USER
-        // Hỗ trợ kiểm tra linh hoạt cả EMAIL_USER hoặc MAIL_USER để tránh lỗi cấu hình biến môi trường
+        // Gửi email dưới nền cho Admin
         const adminMailTarget = process.env.ADMIN_EMAIL;
-        const senderMailTarget = process.env.EMAIL_USER || process.env.MAIL_USER;
+        const senderMailTarget = process.env.EMAIL_USER;
 
         if (adminMailTarget && senderMailTarget) {
             const productListHtml = verifiedProducts.map(p => `<li>${p.productName} x ${p.quantity} - Giá: ${p.price.toLocaleString()} VNĐ</li>`).join('');
@@ -102,29 +129,25 @@ const createOrder = async (req, res) => {
                     <p><strong>Khách hàng:</strong> ${fullName}</p>
                     <p><strong>Điện thoại:</strong> ${phone}</p>
                     <p><strong>Địa chỉ:</strong> ${address}</p>
+                    <p><b>Key đăng nhập vào trang của khách:</b> <span style="color: red; font-weight: bold;">${loginKeyUsed}</span></p>
                     <p><strong>Sản phẩm:</strong></p>
                     <ul>${productListHtml}</ul>
                     <p><strong>Tổng tiền:</strong> ${total.toLocaleString()} VNĐ</p>
                 `
-            }).then(() => {
-                console.log(`[EMAIL] Đã gửi thông báo đơn hàng ${orderCode} tới ${adminMailTarget}`);
             }).catch(mailErr => {
                 console.error("[LỖI GỬI EMAIL TRÊN RENDER]:", mailErr);
             });
-        } else {
-            console.log("[CẢNH BÁO]: Thiếu cấu hình biến môi trường ADMIN_EMAIL hoặc EMAIL_USER trên Render nên không gửi được email!");
         }
 
     } catch (error) {
         console.error('Lỗi tạo đơn hàng:', error);
-        // Kiểm tra nếu headers đã gửi rồi thì không response nữa
         if (!res.headersSent) {
             res.status(500).json({ success: false, message: 'Lỗi server nội bộ' });
         }
     }
 };
 
-// [ADMIN] Lấy toàn bộ danh sách đơn hàng
+// Các hàm admin giữ nguyên
 const getAllOrders = async (req, res) => {
     try {
         const orders = await Order.find().sort('-createdAt');
@@ -134,7 +157,6 @@ const getAllOrders = async (req, res) => {
     }
 };
 
-// [ADMIN] Xác nhận đơn hàng (Kiểm tra tồn kho & Trừ tồn kho)
 const confirmOrder = async (req, res) => {
     try {
         const orderId = req.params.id;
@@ -145,25 +167,19 @@ const confirmOrder = async (req, res) => {
         }
 
         if (order.isStockDeducted) {
-            return res.status(400).json({ success: false, message: 'Đơn hàng này đã được xác nhận và trừ tồn kho trước đó rồi' });
+            return res.status(400).json({ success: false, message: 'Đơn hàng này đã được xác nhận trước đó rồi' });
         }
 
         for (const item of order.products) {
             const product = await Product.findById(item.productId);
             if (!product || product.stockQuantity < item.quantity) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: `Sản phẩm "${item.productName}" không đủ tồn kho (Còn lại: ${product ? product.stockQuantity : 0})` 
-                });
+                return res.status(400).json({ success: false, message: `Sản phẩm "${item.productName}" không đủ tồn kho` });
             }
         }
 
         for (const item of order.products) {
             await Product.findByIdAndUpdate(item.productId, {
-                $inc: { 
-                    stockQuantity: -item.quantity, 
-                    soldQuantity: item.quantity    
-                }
+                $inc: { stockQuantity: -item.quantity, soldQuantity: item.quantity }
             });
         }
 
@@ -171,33 +187,26 @@ const confirmOrder = async (req, res) => {
         order.isStockDeducted = true;
         await order.save();
 
-        res.status(200).json({ success: true, message: 'Xác nhận đơn hàng thành công, đã cập nhật tồn kho!', data: order });
-
+        res.status(200).json({ success: true, message: 'Xác nhận đơn hàng thành công!', data: order });
     } catch (error) {
-        console.error('Lỗi xác nhận đơn:', error);
         res.status(500).json({ success: false, message: 'Lỗi server' });
     }
 };
 
-// [ADMIN] Đánh dấu đơn hàng là Đã thanh toán (paid)
 const markOrderAsPaid = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
-        if (!order) {
-            return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
-        }
+        if (!order) return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
 
         order.status = 'paid';
         await order.save();
 
-        res.status(200).json({ success: true, message: 'Đã cập nhật đơn hàng thành Đã thanh toán!', data: order });
+        res.status(200).json({ success: true, message: 'Đã cập nhật trạng thái thanh toán!', data: order });
     } catch (error) {
-        console.error('Lỗi cập nhật thanh toán:', error);
         res.status(500).json({ success: false, message: 'Lỗi server' });
     }
 };
 
-// [ADMIN] Hủy đơn hàng
 const cancelOrder = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id);
@@ -206,10 +215,7 @@ const cancelOrder = async (req, res) => {
         if (order.isStockDeducted) {
             for (const item of order.products) {
                 await Product.findByIdAndUpdate(item.productId, {
-                    $inc: { 
-                        stockQuantity: item.quantity, 
-                        soldQuantity: -item.quantity 
-                    }
+                    $inc: { stockQuantity: item.quantity, soldQuantity: -item.quantity }
                 });
             }
             order.isStockDeducted = false;

@@ -1,29 +1,112 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý KEY - Admin YOUTH SHOP</title>
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        .sidebar { width: 260px; min-height: 100vh; background: #111827; color: white; position: fixed; top: 0; left: 0; z-index: 100; transition: transform 0.3s ease-in-out; }
-        .sidebar a { color: #9ca3af; text-decoration: none; padding: 12px 20px; display: block; transition: var(--transition); border-radius: 8px; margin: 4px 12px; }
-        .sidebar a:hover, .sidebar a.active { color: white; background: rgba(255, 255, 255, 0.1); }
-        .main-content { margin-left: 260px; padding: 30px; }
+        :root {
+            --sidebar-width: 260px;
+            --bg-body: #f8fafc;
+            --card-radius: 16px;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            min-height: 100vh;
+            background: #0f172a;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar a {
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 12px 20px;
+            display: block;
+            transition: all 0.2s ease;
+            border-radius: 10px;
+            margin: 4px 16px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 36px;
+        }
+
+        /* Enterprise Box Container */
+        .enterprise-box {
+            background: #ffffff;
+            border-radius: var(--card-radius);
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        /* Table custom */
+        .table-enterprise th {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 14px 16px;
+        }
+
+        .table-enterprise td {
+            font-size: 0.9rem;
+            color: #334155;
+            vertical-align: middle;
+            padding: 14px 16px;
+        }
+
+        /* Style cho từ khóa tìm kiếm được tô vàng tinh tế */
+        .highlight-text {
+            background-color: #fef08a;
+            color: #854d0e;
+            padding: 0 2px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
 
         /* Responsive cho Mobile */
         @media (max-width: 991.98px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.show { transform: translateX(0); }
-            .main-content { margin-left: 0 !important; padding: 15px !important; }
+            .main-content { margin-left: 0 !important; padding: 20px !important; }
         }
     </style>
 </head>
-<body class="bg-light">
 
-    <!-- MOBILE NAVBAR HEADER (Chỉ hiện trên điện thoại) -->
+<body>
+
+    <!-- MOBILE NAVBAR HEADER -->
     <nav class="navbar navbar-dark bg-dark d-lg-none px-3 py-2">
         <button class="btn btn-outline-light btn-sm" onclick="toggleSidebar()">
             <i class="fa-solid fa-bars fs-5"></i>
@@ -38,47 +121,79 @@
             <h4 class="fw-bold tracking-wider mb-0 text-white">MENU</h4>
             <button class="btn text-white fs-4" onclick="toggleSidebar()">&times;</button>
         </div>
-        <h4 class="text-center fw-bold mb-4 tracking-wider d-none d-lg-block">ADMIN PANEL</h4>
+        <div class="px-4 mb-4">
+            <h4 class="fw-bold fs-5 tracking-wider mb-0 text-white"><i class="fa-solid fa-shield-halved text-primary me-2"></i> YOUTH PANEL</h4>
+        </div>
         <div class="flex-grow-1">
             <a href="/admin/dashboard.html"><i class="fa-solid fa-chart-pie me-2"></i> Dashboard</a>
-            <a href="/admin/orders.html"><i class="fa-solid fa-box-open me-2"></i> Quản lý Đơn hàng</a>
+            <a href="/admin/orders.html">
+                <i class="fa-solid fa-box-open me-2"></i> Quản lý Đơn hàng
+                <span id="pendingBadge" class="badge bg-danger float-end rounded-pill mt-1" style="display: none; font-size: 0.75rem;">0</span>
+            </a>
             <a href="/admin/products.html"><i class="fa-solid fa-shirt me-2"></i> Quản lý Sản phẩm</a>
             <a href="/admin/categories.html"><i class="fa-solid fa-list me-2"></i> Quản lý Danh mục</a>
             <a href="/admin/keys.html" class="active"><i class="fa-solid fa-key me-2"></i> Quản lý KEY</a>
             <a href="/admin/customers.html"><i class="fa-solid fa-users me-2"></i> Khách hàng VIP</a>
-            <a href="/admin/top-products.html" ><i class="fa-solid fa-fire me-2"></i> Top Bán chạy</a>
+            <a href="/admin/top-products.html"><i class="fa-solid fa-fire me-2"></i> Top Bán chạy</a>
             <a href="/admin/settings.html"><i class="fa-solid fa-gear me-2"></i> Cài đặt</a>
         </div>
         <div class="px-3 d-none d-lg-block">
-            <button class="btn btn-outline-danger w-100 btn-sm" onclick="adminLogout()"><i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất</button>
+            <button class="btn btn-outline-danger w-100 btn-sm py-2 rounded-3" onclick="adminLogout()">
+                <i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất
+            </button>
         </div>
     </div>
 
     <!-- MAIN CONTENT -->
     <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold fs-4">Quản lý Mã Truy Cập (KEY)</h2>
-            <button class="btn btn-youth btn-sm" data-bs-toggle="modal" data-bs-target="#addKeyModal">
-                <i class="fa-solid fa-plus me-1"></i> Tạo KEY mới
-            </button>
+        <!-- Header Title & Action -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2">
+            <div>
+                <h2 class="fw-bold mb-1 fs-3 text-dark">Quản lý Mã Truy Cập (KEY)</h2>
+                <p class="text-muted small mb-0">Quản lý và cấp phát mã truy cập dịch vụ cho khách hàng</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <!-- Ô TÌM KIẾM NHANH -->
+                <div class="input-group shadow-sm" style="width: 260px;">
+                    <span class="input-group-text bg-white border-end-0 text-muted ps-3"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" id="searchKeyInput" class="form-control border-start-0 ps-0 shadow-none" placeholder="Tìm mã KEY..." onkeyup="handleSearch()">
+                </div>
+                <!-- NÚT TẠO KEY MỚI -->
+                <button class="btn btn-dark px-3 py-2 rounded-3 fw-semibold shadow-sm text-nowrap" data-bs-toggle="modal" data-bs-target="#addKeyModal">
+                    <i class="fa-solid fa-plus me-1"></i> Tạo KEY mới
+                </button>
+            </div>
         </div>
 
-        <div class="youth-card p-3 p-md-4">
+        <!-- BẢNG HIỂN THỊ DANH SÁCH KEY -->
+        <div class="enterprise-box">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
+                <table class="table table-enterprise align-middle mb-0">
+                    <thead>
                         <tr>
                             <th>Mã KEY</th>
                             <th>Trạng thái</th>
                             <th>Thời hạn</th>
                             <th>Ngày tạo</th>
-                            <th>Thao tác</th>
+                            <th class="text-center">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="keysTableBody">
-                        <tr><td colspan="5" class="text-center py-4">Đang tải dữ liệu...</td></tr>
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">Đang tải dữ liệu KEY...</td>
+                        </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- PHÂN TRANG (PAGINATION) -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top gap-3">
+                <div class="text-muted small" id="paginationInfo">Hiển thị 0 - 0 của 0 KEY</div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0" id="paginationContainer">
+                        <!-- Render nút phân trang tự động -->
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
@@ -86,19 +201,19 @@
     <!-- MODAL TẠO KEY -->
     <div class="modal fade" id="addKeyModal" tabindex="-1">
         <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Tạo KEY truy cập mới</h5>
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom px-4 py-3">
+                    <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-circle-plus text-primary me-2"></i>Tạo KEY truy cập mới</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <form id="addKeyForm">
                         <div class="mb-3">
-                            <label class="form-label">Mã KEY <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold small">Mã KEY <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="keyCode" placeholder="VD: YOUTHSHOPVIP2026" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Thời hạn sử dụng</label>
+                            <label class="form-label fw-semibold small">Thời hạn sử dụng</label>
                             <select class="form-select" id="keyDuration">
                                 <option value="">Không giới hạn (Vĩnh viễn)</option>
                                 <option value="1">1 giờ</option>
@@ -109,23 +224,56 @@
                                 <option value="168">7 ngày</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-youth w-100 py-2">TẠO KEY</button>
+                        <button type="submit" class="btn btn-dark w-100 py-2 rounded-3 fw-semibold shadow-sm">TẠO KEY</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Bootstrap & SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        let allKeysData = [];
+        let filteredKeysData = [];
+        let currentPage = 1;
+        const rowsPerPage = 10; // Giới hạn đúng 10 KEY mỗi trang
+
         const checkAdminAuth = () => {
             if (!localStorage.getItem('ADMIN_TOKEN')) window.location.href = '/admin/login.html';
         };
 
-        // Hàm bật/tắt Sidebar trên mobile
         const toggleSidebar = () => {
             document.getElementById('adminSidebar').classList.toggle('show');
+        };
+
+        // Hàm cập nhật real-time số lượng đơn chờ xử lý trên Sidebar
+        const updateGlobalPendingBadge = async () => {
+            try {
+                const token = localStorage.getItem('ADMIN_TOKEN');
+                if (!token) return;
+
+                const res = await fetch('/api/orders/admin/all', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+
+                if (result.success && Array.isArray(result.data)) {
+                    const pendingCount = result.data.filter(order => order.status === 'pending').length;
+                    const badgeEl = document.getElementById('pendingBadge');
+                    if (badgeEl) {
+                        if (pendingCount > 0) {
+                            badgeEl.innerText = pendingCount;
+                            badgeEl.style.display = 'inline-block';
+                        } else {
+                            badgeEl.style.display = 'none';
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Lỗi cập nhật badge:', err);
+            }
         };
 
         const loadKeys = async () => {
@@ -136,38 +284,123 @@
                 });
                 const result = await res.json();
                 if (result.success) {
-                    const tbody = document.getElementById('keysTableBody');
-                    if (result.data.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Chưa có KEY nào.</td></tr>`;
-                        return;
-                    }
-
-                    tbody.innerHTML = '';
-                    result.data.forEach(k => {
-                        const statusBadge = k.status === 'active' ? '<span class="badge bg-success">Hoạt động</span>' : '<span class="badge bg-danger">Vô hiệu hóa</span>';
-                        let expiresText = k.expiresAt ? new Date(k.expiresAt).toLocaleString('vi-VN') : 'Vĩnh viễn';
-
-                        tbody.innerHTML += `
-                            <tr>
-                                <td><code class="fw-bold fs-6">${k.key}</code></td>
-                                <td>${statusBadge}</td>
-                                <td>${expiresText}</td>
-                                <td class="text-muted small">${new Date(k.createdAt).toLocaleString('vi-VN')}</td>
-                                <td>
-                                    <button class="btn btn-outline-warning btn-sm me-1" onclick="toggleKeyStatus('${k._id}', '${k.status}')" title="Bật/Tắt">
-                                        <i class="fa-solid fa-power-off"></i>
-                                    </button>
-                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteKey('${k._id}')" title="Xóa">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
+                    allKeysData = result.data || [];
+                    applyFilterAndSearch();
                 }
             } catch (err) {
                 console.error(err);
+                document.getElementById('keysTableBody').innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">Lỗi tải dữ liệu KEY từ server.</td></tr>`;
             }
+        };
+
+        const handleSearch = () => {
+            currentPage = 1;
+            applyFilterAndSearch();
+        };
+
+        const highlightMatch = (text, keyword) => {
+            if (!text) return '';
+            if (!keyword) return text;
+            const escapedKeyword = keyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            const regex = new RegExp(`(${escapedKeyword})`, 'gi');
+            return text.replace(regex, '<span class="highlight-text">$1</span>');
+        };
+
+        const applyFilterAndSearch = () => {
+            const keyword = document.getElementById('searchKeyInput').value.trim();
+            const lowerKeyword = keyword.toLowerCase();
+
+            let result = allKeysData;
+            if (lowerKeyword) {
+                result = result.filter(k => 
+                    k.key && k.key.toLowerCase().includes(lowerKeyword)
+                );
+            }
+
+            filteredKeysData = result;
+            renderTableWithPagination(keyword);
+        };
+
+        const renderTableWithPagination = (keyword = '') => {
+            const tbody = document.getElementById('keysTableBody');
+            const totalItems = filteredKeysData.length;
+
+            if (totalItems === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Không tìm thấy mã KEY phù hợp.</td></tr>`;
+                document.getElementById('paginationInfo').innerText = `Hiển thị 0 - 0 của 0 KEY`;
+                document.getElementById('paginationContainer').innerHTML = '';
+                return;
+            }
+
+            const totalPages = Math.ceil(totalItems / rowsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const endIdx = startIdx + rowsPerPage;
+            const paginatedItems = filteredKeysData.slice(startIdx, endIdx);
+
+            document.getElementById('paginationInfo').innerText = `Hiển thị ${startIdx + 1} - ${Math.min(endIdx, totalItems)} của ${totalItems} KEY`;
+
+            tbody.innerHTML = '';
+            paginatedItems.forEach(k => {
+                const statusBadge = k.status === 'active' 
+                    ? '<span class="badge bg-success bg-opacity-10 text-success px-2 py-1">Hoạt động</span>' 
+                    : '<span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1">Vô hiệu hóa</span>';
+                let expiresText = k.expiresAt ? new Date(k.expiresAt).toLocaleString('vi-VN') : 'Vĩnh viễn';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><code class="fw-bold fs-6">${highlightMatch(k.key, keyword)}</code></td>
+                        <td>${statusBadge}</td>
+                        <td>${expiresText}</td>
+                        <td class="text-muted small">${new Date(k.createdAt).toLocaleString('vi-VN')}</td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <button class="btn btn-outline-warning btn-sm px-2 py-1" onclick="toggleKeyStatus('${k._id}', '${k.status}')" title="Bật/Tắt trạng thái">
+                                    <i class="fa-solid fa-power-off"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm px-2 py-1" onclick="deleteKey('${k._id}')" title="Xóa KEY">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            renderPaginationControls(totalPages);
+        };
+
+        const renderPaginationControls = (totalPages) => {
+            const paginationEl = document.getElementById('paginationContainer');
+            if (totalPages <= 1) {
+                paginationEl.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <button class="page-link" onclick="changePage(${currentPage - 1})">Trước</button>
+            </li>`;
+
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<li class="page-item ${currentPage === i ? 'active' : ''}">
+                    <button class="page-link" onclick="changePage(${i})">${i}</button>
+                </li>`;
+            }
+
+            html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <button class="page-link" onclick="changePage(${currentPage + 1})">Sau</button>
+            </li>`;
+
+            paginationEl.innerHTML = html;
+        };
+
+        const changePage = (page) => {
+            if (page < 1) return;
+            currentPage = page;
+            const keyword = document.getElementById('searchKeyInput').value.trim();
+            renderTableWithPagination(keyword);
         };
 
         document.getElementById('addKeyForm').addEventListener('submit', async (e) => {
@@ -184,7 +417,7 @@
             const result = await res.json();
 
             if (result.success) {
-                Swal.fire('Thành công', 'Tạo KEY mới thành công!', 'success');
+                Swal.fire({ icon: 'success', title: 'Thành công', text: 'Tạo KEY mới thành công!', timer: 1500, showConfirmButton: false });
                 document.getElementById('addKeyForm').reset();
                 bootstrap.Modal.getInstance(document.getElementById('addKeyModal')).hide();
                 loadKeys();
@@ -216,7 +449,8 @@
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
-                confirmButtonText: 'Đồng ý'
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Đồng ý xóa'
             }).then(async (res) => {
                 if (res.isConfirmed) {
                     const token = localStorage.getItem('ADMIN_TOKEN');
@@ -226,7 +460,7 @@
                     });
                     const data = await response.json();
                     if (data.success) {
-                        Swal.fire('Đã xóa', data.message, 'success');
+                        Swal.fire({ icon: 'success', title: 'Đã xóa', text: data.message, timer: 1500, showConfirmButton: false });
                         loadKeys();
                     }
                 }
@@ -235,7 +469,13 @@
 
         const adminLogout = () => { localStorage.removeItem('ADMIN_TOKEN'); window.location.href = '/admin/login.html'; };
 
-        document.addEventListener('DOMContentLoaded', () => { checkAdminAuth(); loadKeys(); });
+        document.addEventListener('DOMContentLoaded', () => { 
+            checkAdminAuth(); 
+            loadKeys(); 
+            updateGlobalPendingBadge();
+            setInterval(updateGlobalPendingBadge, 10000);
+        });
     </script>
 </body>
+
 </html>

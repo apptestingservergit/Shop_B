@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,22 +12,101 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        .sidebar { width: 260px; min-height: 100vh; background: #111827; color: white; position: fixed; top: 0; left: 0; z-index: 100; transition: transform 0.3s ease-in-out; }
-        .sidebar a { color: #9ca3af; text-decoration: none; padding: 12px 20px; display: block; transition: var(--transition); border-radius: 8px; margin: 4px 12px; }
-        .sidebar a:hover, .sidebar a.active { color: white; background: rgba(255, 255, 255, 0.1); }
-        .main-content { margin-left: 260px; padding: 30px; }
+        :root {
+            --sidebar-width: 260px;
+            --bg-body: #f8fafc;
+            --card-radius: 16px;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            min-height: 100vh;
+            background: #0f172a;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar a {
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 12px 20px;
+            display: block;
+            transition: all 0.2s ease;
+            border-radius: 10px;
+            margin: 4px 16px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 36px;
+        }
+
+        /* Enterprise Box Container */
+        .enterprise-box {
+            background: #ffffff;
+            border-radius: var(--card-radius);
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        /* Table custom */
+        .table-enterprise th {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 14px 16px;
+        }
+
+        .table-enterprise td {
+            font-size: 0.9rem;
+            color: #334155;
+            vertical-align: middle;
+            padding: 14px 16px;
+        }
+
+        /* Style cho từ khóa tìm kiếm được tô vàng tinh tế */
+        .highlight-text {
+            background-color: #fef08a;
+            color: #854d0e;
+            padding: 0 2px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
 
         /* Responsive cho Mobile */
         @media (max-width: 991.98px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.show { transform: translateX(0); }
-            .main-content { margin-left: 0 !important; padding: 15px !important; }
+            .main-content { margin-left: 0 !important; padding: 20px !important; }
         }
     </style>
 </head>
-<body class="bg-light">
 
-    <!-- MOBILE NAVBAR HEADER (Chỉ hiện trên điện thoại) -->
+<body>
+
+    <!-- MOBILE NAVBAR HEADER -->
     <nav class="navbar navbar-dark bg-dark d-lg-none px-3 py-2">
         <button class="btn btn-outline-light btn-sm" onclick="toggleSidebar()">
             <i class="fa-solid fa-bars fs-5"></i>
@@ -41,10 +121,15 @@
             <h4 class="fw-bold tracking-wider mb-0 text-white">MENU</h4>
             <button class="btn text-white fs-4" onclick="toggleSidebar()">&times;</button>
         </div>
-        <h4 class="text-center fw-bold mb-4 tracking-wider d-none d-lg-block">ADMIN PANEL</h4>
+        <div class="px-4 mb-4">
+            <h4 class="fw-bold fs-5 tracking-wider mb-0 text-white"><i class="fa-solid fa-shield-halved text-primary me-2"></i> YOUTH PANEL</h4>
+        </div>
         <div class="flex-grow-1">
             <a href="/admin/dashboard.html"><i class="fa-solid fa-chart-pie me-2"></i> Dashboard</a>
-            <a href="/admin/orders.html"><i class="fa-solid fa-box-open me-2"></i> Quản lý Đơn hàng</a>
+            <a href="/admin/orders.html">
+                <i class="fa-solid fa-box-open me-2"></i> Quản lý Đơn hàng
+                <span id="pendingBadge" class="badge bg-danger float-end rounded-pill mt-1" style="display: none; font-size: 0.75rem;">0</span>
+            </a>
             <a href="/admin/products.html"><i class="fa-solid fa-shirt me-2"></i> Quản lý Sản phẩm</a>
             <a href="/admin/categories.html" class="active"><i class="fa-solid fa-list me-2"></i> Quản lý Danh mục</a>
             <a href="/admin/keys.html"><i class="fa-solid fa-key me-2"></i> Quản lý KEY</a>
@@ -53,37 +138,62 @@
             <a href="/admin/settings.html"><i class="fa-solid fa-gear me-2"></i> Cài đặt</a>
         </div>
         <div class="px-3 d-none d-lg-block">
-            <button class="btn btn-outline-danger w-100 btn-sm" onclick="adminLogout()"><i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất</button>
+            <button class="btn btn-outline-danger w-100 btn-sm py-2 rounded-3" onclick="adminLogout()">
+                <i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất
+            </button>
         </div>
     </div>
 
     <!-- MAIN CONTENT -->
     <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold fs-4">Quản lý Danh mục sản phẩm</h2>
-            <button class="btn btn-youth btn-sm" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-                <i class="fa-solid fa-plus me-1"></i> Thêm danh mục
-            </button>
+        <!-- Header Title & Action -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2">
+            <div>
+                <h2 class="fw-bold mb-1 fs-3 text-dark">Quản lý Danh mục sản phẩm</h2>
+                <p class="text-muted small mb-0">Quản lý các nhóm hàng hóa và phân loại sản phẩm trên hệ thống</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <!-- Ô TÌM KIẾM NHANH -->
+                <div class="input-group shadow-sm" style="width: 260px;">
+                    <span class="input-group-text bg-white border-end-0 text-muted ps-3"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" id="searchCategoryInput" class="form-control border-start-0 ps-0 shadow-none" placeholder="Tìm tên danh mục..." onkeyup="handleSearch()">
+                </div>
+                <!-- NÚT THÊM DANH MỤC -->
+                <button class="btn btn-dark px-3 py-2 rounded-3 fw-semibold shadow-sm text-nowrap" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                    <i class="fa-solid fa-plus me-1"></i> Thêm danh mục
+                </button>
+            </div>
         </div>
 
-        <div class="youth-card p-3 p-md-4">
+        <!-- BẢNG HIỂN THỊ DANH SÁCH DANH MỤC -->
+        <div class="enterprise-box">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
+                <table class="table table-enterprise align-middle mb-0">
+                    <thead>
                         <tr>
                             <th>Tên danh mục</th>
                             <th>Slug URL</th>
                             <th>Mô tả</th>
                             <th>Trạng thái</th>
-                            <th>Thao tác</th>
+                            <th class="text-center">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="categoriesTableBody">
                         <tr>
-                            <td colspan="5" class="text-center py-4">Đang tải dữ liệu...</td>
+                            <td colspan="5" class="text-center py-4 text-muted">Đang tải dữ liệu danh mục...</td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- PHÂN TRANG (PAGINATION) -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top gap-3">
+                <div class="text-muted small" id="paginationInfo">Hiển thị 0 - 0 của 0 danh mục</div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0" id="paginationContainer">
+                        <!-- Render nút phân trang tự động -->
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
@@ -91,77 +201,222 @@
     <!-- MODAL THÊM DANH MỤC -->
     <div class="modal fade" id="addCategoryModal" tabindex="-1">
         <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Thêm danh mục mới</h5>
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom px-4 py-3">
+                    <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-circle-plus text-primary me-2"></i>Thêm danh mục mới</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <form id="addCategoryForm">
                         <div class="mb-3">
-                            <label class="form-label">Tên danh mục <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold small">Tên danh mục <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="catName" placeholder="VD: Áo Thun, Phụ kiện..." required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Mô tả</label>
+                            <label class="form-label fw-semibold small">Mô tả</label>
                             <textarea class="form-control" id="catDesc" rows="3" placeholder="Mô tả ngắn về danh mục..."></textarea>
                         </div>
-                        <button type="submit" class="btn btn-youth w-100 py-2">LƯU DANH MỤC</button>
+                        <button type="submit" class="btn btn-dark w-100 py-2 rounded-3 fw-semibold shadow-sm">LƯU DANH MỤC</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS & SweetAlert2 -->
+    <!-- MODAL SỬA DANH MỤC -->
+    <div class="modal fade" id="editCategoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom px-4 py-3">
+                    <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-pen-to-square text-primary me-2"></i>Chỉnh sửa danh mục</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="editCategoryForm">
+                        <input type="hidden" id="editCatId">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Tên danh mục <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editCatName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Mô tả</label>
+                            <textarea class="form-control" id="editCatDesc" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-dark w-100 py-2 rounded-3 fw-semibold shadow-sm">CẬP NHẬT DANH MỤC</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap & SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        let allCategoriesData = [];
+        let filteredCategoriesData = [];
+        let currentPage = 1;
+        const rowsPerPage = 10;
+
         const checkAdminAuth = () => {
             const token = localStorage.getItem('ADMIN_TOKEN');
             if (!token) window.location.href = '/admin/login.html';
         };
 
-        // Hàm bật/tắt Sidebar trên mobile
         const toggleSidebar = () => {
             document.getElementById('adminSidebar').classList.toggle('show');
         };
 
-        // 1. Tải danh sách danh mục hiển thị ra bảng
+        // Hàm cập nhật real-time số lượng đơn chờ xử lý trên Sidebar
+        const updateGlobalPendingBadge = async () => {
+            try {
+                const token = localStorage.getItem('ADMIN_TOKEN');
+                if (!token) return;
+
+                const res = await fetch('/api/orders/admin/all', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+
+                if (result.success && Array.isArray(result.data)) {
+                    const pendingCount = result.data.filter(order => order.status === 'pending').length;
+                    const badgeEl = document.getElementById('pendingBadge');
+                    if (badgeEl) {
+                        if (pendingCount > 0) {
+                            badgeEl.innerText = pendingCount;
+                            badgeEl.style.display = 'inline-block';
+                        } else {
+                            badgeEl.style.display = 'none';
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Lỗi cập nhật badge:', err);
+            }
+        };
+
         const loadCategories = async () => {
             try {
                 const res = await fetch('/api/categories');
                 const result = await res.json();
                 if (result.success) {
-                    const tbody = document.getElementById('categoriesTableBody');
-                    if (result.data.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Chưa có danh mục nào.</td></tr>`;
-                        return;
-                    }
-
-                    tbody.innerHTML = '';
-                    result.data.forEach(cat => {
-                        tbody.innerHTML += `
-                            <tr>
-                                <td class="fw-bold">${cat.name}</td>
-                                <td><code>${cat.slug}</code></td>
-                                <td class="text-muted">${cat.description || 'Không có mô tả'}</td>
-                                <td><span class="badge bg-success">Hoạt động</span></td>
-                                <td>
-                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteCategory('${cat._id}')">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
+                    allCategoriesData = result.data || [];
+                    applyFilterAndSearch();
                 }
             } catch (err) {
                 console.error('Lỗi tải danh mục:', err);
+                document.getElementById('categoriesTableBody').innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">Lỗi tải dữ liệu danh mục từ server.</td></tr>`;
             }
         };
 
-        // 2. Thêm danh mục mới qua Form
+        const handleSearch = () => {
+            currentPage = 1;
+            applyFilterAndSearch();
+        };
+
+        const highlightMatch = (text, keyword) => {
+            if (!text) return '';
+            if (!keyword) return text;
+            const escapedKeyword = keyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            const regex = new RegExp(`(${escapedKeyword})`, 'gi');
+            return text.replace(regex, '<span class="highlight-text">$1</span>');
+        };
+
+        const applyFilterAndSearch = () => {
+            const keyword = document.getElementById('searchCategoryInput').value.trim();
+            const lowerKeyword = keyword.toLowerCase();
+
+            let result = allCategoriesData;
+            if (lowerKeyword) {
+                result = result.filter(cat => 
+                    (cat.name && cat.name.toLowerCase().includes(lowerKeyword)) ||
+                    (cat.slug && cat.slug.toLowerCase().includes(lowerKeyword)) ||
+                    (cat.description && cat.description.toLowerCase().includes(lowerKeyword))
+                );
+            }
+
+            filteredCategoriesData = result;
+            renderTableWithPagination(keyword);
+        };
+
+        const renderTableWithPagination = (keyword = '') => {
+            const tbody = document.getElementById('categoriesTableBody');
+            const totalItems = filteredCategoriesData.length;
+
+            if (totalItems === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Không tìm thấy danh mục phù hợp.</td></tr>`;
+                document.getElementById('paginationInfo').innerText = `Hiển thị 0 - 0 của 0 danh mục`;
+                document.getElementById('paginationContainer').innerHTML = '';
+                return;
+            }
+
+            const totalPages = Math.ceil(totalItems / rowsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const endIdx = startIdx + rowsPerPage;
+            const paginatedItems = filteredCategoriesData.slice(startIdx, endIdx);
+
+            document.getElementById('paginationInfo').innerText = `Hiển thị ${startIdx + 1} - ${Math.min(endIdx, totalItems)} của ${totalItems} danh mục`;
+
+            tbody.innerHTML = '';
+            paginatedItems.forEach(cat => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-semibold text-dark">${highlightMatch(cat.name, keyword)}</td>
+                        <td><code class="text-primary">${cat.slug}</code></td>
+                        <td class="text-muted">${cat.description || 'Không có mô tả'}</td>
+                        <td><span class="badge bg-success bg-opacity-10 text-success px-2 py-1">Hoạt động</span></td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <button class="btn btn-outline-primary btn-sm px-2 py-1" onclick="openEditModal('${cat._id}', '${cat.name.replace(/'/g, "\\'")}', '${(cat.description || '').replace(/'/g, "\\'")}')" title="Sửa danh mục">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm px-2 py-1" onclick="deleteCategory('${cat._id}')" title="Xóa danh mục">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            renderPaginationControls(totalPages);
+        };
+
+        const renderPaginationControls = (totalPages) => {
+            const paginationEl = document.getElementById('paginationContainer');
+            if (totalPages <= 1) {
+                paginationEl.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <button class="page-link" onclick="changePage(${currentPage - 1})">Trước</button>
+            </li>`;
+
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<li class="page-item ${currentPage === i ? 'active' : ''}">
+                    <button class="page-link" onclick="changePage(${i})">${i}</button>
+                </li>`;
+            }
+
+            html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <button class="page-link" onclick="changePage(${currentPage + 1})">Sau</button>
+            </li>`;
+
+            paginationEl.innerHTML = html;
+        };
+
+        const changePage = (page) => {
+            if (page < 1) return;
+            currentPage = page;
+            const keyword = document.getElementById('searchCategoryInput').value.trim();
+            renderTableWithPagination(keyword);
+        };
+
+        // Thêm danh mục
         document.getElementById('addCategoryForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const token = localStorage.getItem('ADMIN_TOKEN');
@@ -182,7 +437,7 @@
                 const result = await res.json();
 
                 if (result.success) {
-                    Swal.fire('Thành công', 'Thêm danh mục mới thành công!', 'success');
+                    Swal.fire({ icon: 'success', title: 'Thành công', text: 'Thêm danh mục mới thành công!', timer: 1500, showConfirmButton: false });
                     document.getElementById('addCategoryForm').reset();
                     bootstrap.Modal.getInstance(document.getElementById('addCategoryModal')).hide();
                     loadCategories();
@@ -194,7 +449,50 @@
             }
         });
 
-        // 3. Xóa danh mục
+        // Mở Modal Sửa
+        window.openEditModal = (id, name, desc) => {
+            document.getElementById('editCatId').value = id;
+            document.getElementById('editCatName').value = name;
+            document.getElementById('editCatDesc').value = desc;
+
+            const editModal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
+            editModal.show();
+        };
+
+        // Cập nhật danh mục
+        document.getElementById('editCategoryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('ADMIN_TOKEN');
+            const id = document.getElementById('editCatId').value;
+            const updatedData = {
+                name: document.getElementById('editCatName').value.trim(),
+                description: document.getElementById('editCatDesc').value.trim()
+            };
+
+            try {
+                const res = await fetch(`/api/categories/${id}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    Swal.fire({ icon: 'success', title: 'Thành công', text: 'Cập nhật danh mục thành công!', timer: 1500, showConfirmButton: false });
+                    bootstrap.Modal.getInstance(document.getElementById('editCategoryModal')).hide();
+                    loadCategories();
+                } else {
+                    Swal.fire('Lỗi', result.message, 'error');
+                }
+            } catch (err) {
+                Swal.fire('Lỗi', 'Không thể kết nối máy chủ', 'error');
+            }
+        });
+
+        // Xóa danh mục
         const deleteCategory = async (id) => {
             Swal.fire({
                 title: 'Xóa danh mục?',
@@ -213,7 +511,7 @@
                     });
                     const data = await response.json();
                     if (data.success) {
-                        Swal.fire('Đã xóa', data.message, 'success');
+                        Swal.fire({ icon: 'success', title: 'Đã xóa', text: data.message, timer: 1500, showConfirmButton: false });
                         loadCategories();
                     } else {
                         Swal.fire('Lỗi', data.message, 'error');
@@ -227,10 +525,14 @@
             window.location.href = '/admin/login.html'; 
         };
 
+        // Khởi chạy đồng bộ khi trang tải xong
         document.addEventListener('DOMContentLoaded', () => { 
             checkAdminAuth(); 
             loadCategories(); 
+            updateGlobalPendingBadge();
+            setInterval(updateGlobalPendingBadge, 10000);
         });
     </script>
 </body>
+
 </html>

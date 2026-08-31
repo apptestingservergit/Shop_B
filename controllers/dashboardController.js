@@ -6,9 +6,9 @@ const Product = require('../models/Product');
 // @access  Private (Admin)
 const getDashboardStats = async (req, res) => {
     try {
-        const { timeframe = '30days' } = req.query; // Mặc định lọc 30 ngày
+        const { timeframe = '30days' } = req.query;
 
-        // 1. Các thống kê tổng quan (Cards)
+        // 1. Các thống kê tổng quan toàn hệ thống (Cards)
         const totalProducts = await Product.countDocuments({ isDeleted: false });
         const lowStockProducts = await Product.countDocuments({ isDeleted: false, stockQuantity: { $lte: 5 } });
 
@@ -29,28 +29,66 @@ const getDashboardStats = async (req, res) => {
         ]);
         const totalSoldProducts = productsSoldResult.length > 0 ? productsSoldResult[0].totalSold : 0;
 
-        // 2. Xử lý dữ liệu cho BIỂU ĐỒ (Chart Data) theo khoảng thời gian (timeframe)
+        // 2. Tính toán khoảng thời gian (Timeframe) và so sánh kỳ trước để lấy % tăng trưởng
+        let now = new Date();
         let dateLimit = new Date();
+        let previousDateLimit = new Date();
+        let durationMs = 0;
+
         if (timeframe === '7days') {
-            dateLimit.setDate(dateLimit.getDate() - 7);
+            durationMs = 7 * 24 * 60 * 60 * 1000;
         } else if (timeframe === '30days') {
-            dateLimit.setDate(dateLimit.getDate() - 30);
+            durationMs = 30 * 24 * 60 * 60 * 1000;
         } else if (timeframe === '3months') {
-            dateLimit.setMonth(dateLimit.getMonth() - 3);
+            durationMs = 90 * 24 * 60 * 60 * 1000;
         } else if (timeframe === '1year') {
-            dateLimit.setFullYear(dateLimit.getFullYear() - 1);
+            durationMs = 365 * 24 * 60 * 60 * 1000;
         } else {
-            dateLimit = new Date(0); // Lấy từ ngày bắt đầu (All time)
+            durationMs = null; // Toàn bộ thời gian
         }
 
-        // Gom nhóm doanh thu đơn 'paid' theo từng ngày
+        let revenueGrowth = 0;
+        let orderGrowth = 0;
+
+        if (durationMs !== null) {
+            dateLimit = new Date(now.getTime() - durationMs);
+            previousDateLimit = new Date(dateLimit.getTime() - durationMs);
+
+            // Doanh thu kỳ hiện tại vs kỳ trước
+            const currentRevenueAgg = await Order.aggregate([
+                { $match: { status: 'paid', createdAt: { $gte: dateLimit } } },
+                { $group: { _id: null, sum: { $sum: '$total' } } }
+            ]);
+            const currentRev = currentRevenueAgg.length > 0 ? currentRevenueAgg[0].sum : 0;
+
+            const prevRevenueAgg = await Order.aggregate([
+                { $match: { status: 'paid', createdAt: { $gte: previousDateLimit, $lt: dateLimit } } },
+                { $group: { _id: null, sum: { $sum: '$total' } } }
+            ]);
+            const prevRev = prevRevenueAgg.length > 0 ? prevRevenueAgg[0].sum : 0;
+
+            if (prevRev > 0) {
+                revenueGrowth = Number(((currentRev - prevRev) / prevRev * 100).toFixed(1));
+            } else {
+                revenueGrowth = currentRev > 0 ? 100 : 0;
+            }
+
+            // Đơn hàng kỳ hiện tại vs kỳ trước
+            const currentOrderCount = await Order.countDocuments({ createdAt: { $gte: dateLimit } });
+            const prevOrderCount = await Order.countDocuments({ createdAt: { $gte: previousDateLimit, $lt: dateLimit } });
+
+            if (prevOrderCount > 0) {
+                orderGrowth = Number(((currentOrderCount - prevOrderCount) / prevOrderCount * 100).toFixed(1));
+            } else {
+                orderGrowth = currentOrderCount > 0 ? 100 : 0;
+            }
+        } else {
+            dateLimit = new Date(0); // All time
+        }
+
+        // 3. Gom nhóm dữ liệu biểu đồ
         const revenueChartData = await Order.aggregate([
-            { 
-                $match: { 
-                    status: 'paid', 
-                    createdAt: { $gte: dateLimit } 
-                } 
-            },
+            { $match: { status: 'paid', createdAt: { $gte: dateLimit } } },
             {
                 $group: {
                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -58,16 +96,11 @@ const getDashboardStats = async (req, res) => {
                     orderCount: { $sum: 1 }
                 }
             },
-            { $sort: { "_id": 1 } } // Sắp xếp theo ngày tăng dần
+            { $sort: { "_id": 1 } }
         ]);
 
-        // Gom nhóm tổng đơn hàng theo ngày (Bao gồm mọi trạng thái để thấy lưu lượng khách)
         const orderChartData = await Order.aggregate([
-            { 
-                $match: { 
-                    createdAt: { $gte: dateLimit } 
-                } 
-            },
+            { $match: { createdAt: { $gte: dateLimit } } },
             {
                 $group: {
                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -88,6 +121,8 @@ const getDashboardStats = async (req, res) => {
                 totalProducts,
                 lowStockProducts,
                 totalSoldProducts,
+                revenueGrowth, // Trả về % tăng trưởng doanh thu thực tế
+                orderGrowth,   // Trả về % tăng trưởng đơn hàng thực tế
                 revenueChartData,
                 orderChartData
             }

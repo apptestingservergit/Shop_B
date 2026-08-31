@@ -1,5 +1,5 @@
 let cart = JSON.parse(localStorage.getItem('YOUTH_SHOP_CART')) || [];
-let allProducts = []; // Lưu trữ toàn bộ sản phẩm để lọc cục bộ hoặc gọi API
+let allProducts = []; 
 
 const checkAccess = () => {
     const key = localStorage.getItem('YOUTH_SHOP_KEY');
@@ -16,7 +16,7 @@ const updateCartBadge = () => {
     if (badge) badge.innerText = totalItems;
 };
 
-// 1. TẢI CÁC NÚT DANH MỤC ĐỂ LỌC
+// 1. TẢI CÁC NÚT DANH MỤC
 const loadCategoryTabs = async () => {
     try {
         const res = await fetch('/api/categories');
@@ -24,11 +24,9 @@ const loadCategoryTabs = async () => {
         const tabsContainer = document.getElementById('categoryTabs');
 
         if (data.success && tabsContainer) {
-            // Giữ lại nút "Tất cả" đầu tiên, sau đó thêm các danh mục từ DB
-            let html = `<button class="btn btn-dark btn-sm rounded-pill px-3 active" onclick="filterByCategory('all', this)">Tất cả</button>`;
-            
+            let html = `<button class="btn category-tab-btn active" onclick="filterByCategory('all', this)">Tất cả</button>`;
             data.data.forEach(cat => {
-                html += `<button class="btn btn-outline-dark btn-sm rounded-pill px-3" onclick="filterByCategory('${cat._id}', this)">${cat.name}</button>`;
+                html += `<button class="btn category-tab-btn" onclick="filterByCategory('${cat._id}', this)">${cat.name}</button>`;
             });
             tabsContainer.innerHTML = html;
         }
@@ -45,7 +43,8 @@ const loadProducts = async () => {
 
         if (data.success) {
             allProducts = data.data;
-            renderProductList(allProducts);
+            // TỰ ĐỘNG SẮP XẾP: SẢN PHẨM CÒN HÀNG LÊN TRÊN, HẾT HÀNG ĐẨY XUỐNG CUỐI
+            sortAndRenderProducts(allProducts);
         }
     } catch (error) {
         console.error('Lỗi khi tải sản phẩm:', error);
@@ -53,7 +52,19 @@ const loadProducts = async () => {
     }
 };
 
-// 3. HÀM RENDER DANH SÁCH SẢN PHẨM RA MÀN HÌNH
+// Hàm sắp xếp chung: Tồn kho > 0 lên trước, tồn kho <= 0 xuống cuối
+const sortAndRenderProducts = (products) => {
+    const sorted = [...products].sort((a, b) => {
+        const aStock = a.stockQuantity ?? 0;
+        const bStock = b.stockQuantity ?? 0;
+        const aOut = aStock <= 0 ? 1 : 0;
+        const bOut = bStock <= 0 ? 1 : 0;
+        return aOut - bOut; // Sản phẩm còn hàng (0) sẽ đứng trước sản phẩm hết hàng (1)
+    });
+    renderProductList(sorted);
+};
+
+// 3. HÀM RENDER DANH SÁCH SẢN PHẨM (RESPONSIVE 2 CỘT MOBILE)
 const renderProductList = (products) => {
     const productListDiv = document.getElementById('productList');
     if (!productListDiv) return;
@@ -69,33 +80,33 @@ const renderProductList = (products) => {
         const imageUrl = (product.images && product.images.length > 0) ? product.images[0] : 'https://via.placeholder.com/400';
         const categoryName = product.category ? product.category.name : 'Chưa phân loại';
         const categoryId = product.category ? product.category._id : '';
-        const isOutOfStock = product.stockQuantity <= 0;
+        const isOutOfStock = (product.stockQuantity ?? 0) <= 0;
 
         const html = `
             <div class="col-6 col-md-4 col-lg-3 product-item" data-category="${categoryId}">
                 <div class="youth-card h-100 d-flex flex-column ${isOutOfStock ? 'out-of-stock-card' : ''}">
-                    <!-- Bấm vào ảnh chuyển sang trang chi tiết -->
-                    <div class="product-img-wrapper position-relative cursor-pointer" onclick="goToDetail('${product._id}')">
-                        <img src="${imageUrl}" class="product-img ${isOutOfStock ? 'out-of-stock-img' : ''}" alt="${product.name}">
-                        ${isOutOfStock ? '<span class="position-absolute top-50 start-50 translate-middle badge bg-danger fs-6 px-3 py-2 shadow">HẾT HÀNG</span>' : ''}
+                    <!-- Ảnh sản phẩm -->
+                    <div class="product-img-wrapper cursor-pointer" onclick="goToDetail('${product._id}')">
+                        <img src="${imageUrl}" class="product-img ${isOutOfStock ? 'out-of-stock-img' : ''}" alt="${product.name}" loading="lazy">
+                        ${isOutOfStock ? '<span class="position-absolute top-50 start-50 translate-middle badge bg-dark bg-opacity-75 fs-7 px-3 py-2 shadow-sm rounded-pill text-uppercase">Hết hàng</span>' : ''}
                     </div>
                     
+                    <!-- Thông tin sản phẩm -->
                     <div class="p-3 d-flex flex-column flex-grow-1">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="badge bg-secondary">${categoryName}</span>
-                            <span class="stock-badge small text-muted"><i class="fa-solid fa-boxes-stacked me-1"></i>Còn: ${product.stockQuantity}</span>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-light text-secondary border font-monospace" style="font-size: 0.68rem;">${categoryName}</span>
+                            <span class="text-muted" style="font-size: 0.72rem;"><i class="fa-solid fa-box me-1"></i>${product.stockQuantity}</span>
                         </div>
                         
-                        <!-- Bấm vào tên chuyển sang trang chi tiết -->
-                        <h6 class="mb-1 fw-bold text-truncate cursor-pointer" title="${product.name}" onclick="goToDetail('${product._id}')">${product.name}</h6>
-                        <p class="product-price mb-3">${formatMoney(product.price)}</p>
+                        <h6 class="mb-2 fw-semibold text-dark text-truncate cursor-pointer" style="font-size: 0.92rem;" title="${product.name}" onclick="goToDetail('${product._id}')">${product.name}</h6>
+                        <div class="product-price mb-3 mt-auto">${formatMoney(product.price)}</div>
                         
                         ${isOutOfStock ? `
-                            <button class="btn btn-secondary btn-sm mt-auto w-100" disabled>TẠM HẾT HÀNG</button>
+                            <button class="btn btn-outline-secondary btn-sm mt-auto w-100 rounded-pill py-1.5" disabled style="font-size: 0.8rem;">Tạm hết hàng</button>
                         ` : `
-                            <button class="btn btn-outline-dark btn-sm mt-auto w-100" 
-                                onclick="addToCart('${product._id}', '${product.name}', ${product.price}, '${imageUrl}')">
-                                <i class="fa-solid fa-cart-plus me-1"></i> THÊM VÀO GIỎ
+                            <button class="btn btn-dark btn-sm mt-auto w-100 rounded-pill py-1.5 shadow-sm" 
+                                onclick="addToCart('${product._id}', '${product.name}', ${product.price}, '${imageUrl}')" style="font-size: 0.8rem;">
+                                <i class="fa-solid fa-cart-plus me-1"></i> Thêm vào giỏ
                             </button>
                         `}
                     </div>
@@ -108,23 +119,19 @@ const renderProductList = (products) => {
 
 // 4. LỌC SẢN PHẨM KHI BẤM VÀO DANH MỤC
 window.filterByCategory = (catId, btnElement) => {
-    // Đổi active button style
     document.querySelectorAll('#categoryTabs button').forEach(btn => {
-        btn.classList.remove('active', 'btn-dark');
-        btn.classList.add('btn-outline-dark');
+        btn.classList.remove('active');
     });
-    btnElement.classList.remove('btn-outline-dark');
-    btnElement.classList.add('btn-dark', 'active');
+    btnElement.classList.add('active');
 
     if (catId === 'all') {
-        renderProductList(allProducts);
+        sortAndRenderProducts(allProducts);
     } else {
         const filtered = allProducts.filter(p => p.category && p.category._id === catId);
-        renderProductList(filtered);
+        sortAndRenderProducts(filtered);
     }
 };
 
-// 5. CHUYỂN HƯỚNG SANG TRANG CHI TIẾT
 window.goToDetail = (productId) => {
     window.location.href = `/product-detail.html?id=${productId}`;
 };
@@ -145,7 +152,7 @@ window.addToCart = (id, name, price, image) => {
         icon: 'success',
         title: `Đã thêm ${name} vào giỏ`,
         showConfirmButton: false,
-        timer: 2000
+        timer: 1800
     });
 };
 

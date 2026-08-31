@@ -1,35 +1,128 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý đơn hàng - Admin YOUTH SHOP</title>
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/style.css">
     <style>
-        .sidebar { width: 260px; min-height: 100vh; background: #111827; color: white; position: fixed; top: 0; left: 0; z-index: 100; transition: transform 0.3s ease-in-out; }
-        .sidebar a { color: #9ca3af; text-decoration: none; padding: 12px 20px; display: block; transition: var(--transition); border-radius: 8px; margin: 4px 12px; }
-        .sidebar a:hover, .sidebar a.active { color: white; background: rgba(255, 255, 255, 0.1); }
-        .main-content { margin-left: 260px; padding: 30px; }
+        :root {
+            --sidebar-width: 260px;
+            --bg-body: #f8fafc;
+            --card-radius: 16px;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            min-height: 100vh;
+            background: #0f172a;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar a {
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 12px 20px;
+            display: block;
+            transition: all 0.2s ease;
+            border-radius: 10px;
+            margin: 4px 16px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 36px;
+        }
+
+        /* Enterprise Box Container */
+        .enterprise-box {
+            background: #ffffff;
+            border-radius: var(--card-radius);
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        /* Table custom */
+        .table-enterprise th {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 14px 12px;
+        }
+
+        .table-enterprise td {
+            font-size: 0.9rem;
+            color: #334155;
+            vertical-align: middle;
+            padding: 14px 12px;
+        }
+
+        /* Style cho từ khóa tìm kiếm được tô vàng tinh tế */
+        .highlight-text {
+            background-color: #fef08a;
+            color: #854d0e;
+            padding: 0 2px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
 
         /* Responsive cho Mobile */
         @media (max-width: 991.98px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.show { transform: translateX(0); }
-            .main-content { margin-left: 0 !important; padding: 15px !important; }
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                padding: 20px !important;
+            }
         }
     </style>
 </head>
-<body class="bg-light">
 
-    <!-- MOBILE NAVBAR HEADER (Chỉ hiện trên điện thoại) -->
+<body>
+
+    <!-- MOBILE NAVBAR HEADER -->
     <nav class="navbar navbar-dark bg-dark d-lg-none px-3 py-2">
         <button class="btn btn-outline-light btn-sm" onclick="toggleSidebar()">
             <i class="fa-solid fa-bars fs-5"></i>
         </button>
         <span class="navbar-brand fs-6 fw-bold">ADMIN PANEL</span>
-        <button class="btn btn-outline-danger btn-sm" onclick="adminLogout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+        <button class="btn btn-outline-danger btn-sm" onclick="adminLogout()"><i
+                class="fa-solid fa-right-from-bracket"></i></button>
     </nav>
 
     <!-- SIDEBAR -->
@@ -38,10 +131,16 @@
             <h4 class="fw-bold tracking-wider mb-0 text-white">MENU</h4>
             <button class="btn text-white fs-4" onclick="toggleSidebar()">&times;</button>
         </div>
-        <h4 class="text-center fw-bold mb-4 tracking-wider d-none d-lg-block">ADMIN PANEL</h4>
+        <div class="px-4 mb-4">
+            <h4 class="fw-bold fs-5 tracking-wider mb-0 text-white"><i
+                    class="fa-solid fa-shield-halved text-primary me-2"></i> YOUTH PANEL</h4>
+        </div>
         <div class="flex-grow-1">
             <a href="/admin/dashboard.html"><i class="fa-solid fa-chart-pie me-2"></i> Dashboard</a>
-            <a href="/admin/orders.html" class="active"><i class="fa-solid fa-box-open me-2"></i> Quản lý Đơn hàng</a>
+            <a href="/admin/orders.html" class="active"><i class="fa-solid fa-box-open me-2"></i> Quản lý Đơn hàng
+                <span id="pendingBadge" class="badge bg-danger float-end rounded-pill mt-1"
+                    style="display: none; font-size: 0.75rem;">0</span>
+            </a>
             <a href="/admin/products.html"><i class="fa-solid fa-shirt me-2"></i> Quản lý Sản phẩm</a>
             <a href="/admin/categories.html"><i class="fa-solid fa-list me-2"></i> Quản lý Danh mục</a>
             <a href="/admin/keys.html"><i class="fa-solid fa-key me-2"></i> Quản lý KEY</a>
@@ -50,67 +149,103 @@
             <a href="/admin/settings.html"><i class="fa-solid fa-gear me-2"></i> Cài đặt</a>
         </div>
         <div class="px-3 d-none d-lg-block">
-            <button class="btn btn-outline-danger w-100 btn-sm" onclick="adminLogout()"><i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất</button>
+            <button class="btn btn-outline-danger w-100 btn-sm py-2 rounded-3" onclick="adminLogout()">
+                <i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất
+            </button>
         </div>
     </div>
 
     <!-- MAIN CONTENT -->
     <div class="main-content">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <!-- Header Title -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-2">
             <div>
-                <h2 class="fw-bold fs-4 mb-1">Danh sách Đơn hàng</h2>
-                <p class="text-muted small mb-0">Quản lý và cập nhật trạng thái đơn hàng của khách</p>
+                <h2 class="fw-bold mb-1 fs-3 text-dark">Danh sách Đơn hàng</h2>
+                <p class="text-muted small mb-0">Quản lý và cập nhật trạng thái đơn hàng của khách hàng thời gian thực
+                </p>
             </div>
-            <span class="text-muted small" id="adminName">Admin Panel</span>
+            <div class="input-group shadow-sm" style="width: 300px;">
+                <span class="input-group-text bg-white border-end-0 text-muted ps-3"><i
+                        class="fa-solid fa-magnifying-glass"></i></span>
+                <input type="text" id="searchOrderInput" class="form-control border-start-0 ps-0 shadow-none"
+                    placeholder="Tìm mã đơn, tên, SĐT, key..." onkeyup="handleSearch()">
+            </div>
         </div>
 
         <!-- THANH BỘ LỌC TRẠNG THÁI ĐƠN HÀNG -->
         <div class="d-flex flex-wrap gap-2 mb-4" id="orderFilterTabs">
-            <button class="btn btn-dark btn-sm active px-3 py-2" onclick="filterOrders('all', this)">
-                <i class="fa-solid fa-list-check me-1"></i> Tất cả <span class="badge bg-secondary ms-1" id="countAll">0</span>
+            <button class="btn btn-dark btn-sm active px-3 py-2 rounded-3 fw-semibold"
+                onclick="filterOrders('all', this)">
+                <i class="fa-solid fa-list-check me-1"></i> Tất cả <span class="badge bg-secondary ms-1"
+                    id="countAll">0</span>
             </button>
-            <button class="btn btn-outline-warning text-dark btn-sm px-3 py-2" onclick="filterOrders('pending', this)">
-                <i class="fa-solid fa-clock me-1"></i> Chờ xử lý <span class="badge bg-warning text-dark ms-1" id="countPending">0</span>
+            <button class="btn btn-outline-secondary btn-sm px-3 py-2 rounded-3 fw-semibold text-dark"
+                onclick="filterOrders('pending', this)">
+                <i class="fa-solid fa-clock text-warning me-1"></i> Chờ xử lý <span
+                    class="badge bg-warning text-dark ms-1" id="countPending">0</span>
             </button>
-            <button class="btn btn-outline-info text-dark btn-sm px-3 py-2" onclick="filterOrders('processing', this)">
-                <i class="fa-solid fa-spinner me-1"></i> Đang xử lý <span class="badge bg-info text-dark ms-1" id="countProcessing">0</span>
+            <button class="btn btn-outline-secondary btn-sm px-3 py-2 rounded-3 fw-semibold text-dark"
+                onclick="filterOrders('processing', this)">
+                <i class="fa-solid fa-spinner fa-spin text-info me-1"></i> Đang xử lý <span
+                    class="badge bg-info text-dark ms-1" id="countProcessing">0</span>
             </button>
-            <button class="btn btn-outline-success btn-sm px-3 py-2" onclick="filterOrders('paid', this)">
-                <i class="fa-solid fa-check-circle me-1"></i> Đã thanh toán <span class="badge bg-success ms-1" id="countPaid">0</span>
+            <button class="btn btn-outline-secondary btn-sm px-3 py-2 rounded-3 fw-semibold text-dark"
+                onclick="filterOrders('paid', this)">
+                <i class="fa-solid fa-circle-check text-success me-1"></i> Đã thanh toán <span
+                    class="badge bg-success ms-1" id="countPaid">0</span>
             </button>
-            <button class="btn btn-outline-danger btn-sm px-3 py-2" onclick="filterOrders('cancelled', this)">
-                <i class="fa-solid fa-ban me-1"></i> Đã hủy <span class="badge bg-danger ms-1" id="countCancelled">0</span>
+            <button class="btn btn-outline-secondary btn-sm px-3 py-2 rounded-3 fw-semibold text-dark"
+                onclick="filterOrders('cancelled', this)">
+                <i class="fa-solid fa-ban text-danger me-1"></i> Đã hủy <span class="badge bg-danger ms-1"
+                    id="countCancelled">0</span>
             </button>
         </div>
 
-        <div class="youth-card p-3 p-md-4">
+        <!-- BẢNG HIỂN THỊ DANH SÁCH -->
+        <div class="enterprise-box">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
+                <table class="table table-enterprise align-middle mb-0">
+                    <thead>
                         <tr>
                             <th>Mã đơn</th>
                             <th>Khách hàng</th>
+                            <th>Key đăng nhập</th>
                             <th>SĐT / Địa chỉ</th>
-                            <th>Tổng tiền</th>
+                            <th>Sản phẩm & Tổng tiền</th>
                             <th>Trạng thái</th>
-                            <th>Thao tác</th>
+                            <th class="text-center">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="ordersTableBody">
                         <tr>
-                            <td colspan="6" class="text-center py-4">Đang tải dữ liệu...</td>
+                            <td colspan="7" class="text-center py-4 text-muted">Đang tải dữ liệu đơn hàng...</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <!-- PHÂN TRANG (PAGINATION) -->
+            <div
+                class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 pt-3 border-top gap-3">
+                <div class="text-muted small" id="paginationInfo">Hiển thị 0 - 0 của 0 đơn hàng</div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0" id="paginationContainer">
+                        <!-- Render nút phân trang tự động -->
+                    </ul>
+                </nav>
+            </div>
         </div>
     </div>
 
+    <!-- Bootstrap & SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        let allOrdersData = []; // Lưu trữ toàn bộ đơn hàng để lọc cục bộ nhanh chóng
+        let allOrdersData = [];
+        let filteredOrdersData = [];
         let currentFilter = 'all';
+        let currentPage = 1;
+        const rowsPerPage = 10; // Giới hạn đúng 10 đơn hàng mỗi trang
 
         const formatMoney = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
@@ -119,7 +254,6 @@
             if (!token) window.location.href = '/admin/login.html';
         };
 
-        // Hàm bật/tắt Sidebar trên mobile
         const toggleSidebar = () => {
             document.getElementById('adminSidebar').classList.toggle('show');
         };
@@ -135,72 +269,97 @@
                 if (result.success) {
                     allOrdersData = result.data;
                     updateOrderCounters();
-                    renderOrdersTable(allOrdersData);
+                    applyFilterAndSearch();
                 }
             } catch (err) {
                 console.error(err);
-                document.getElementById('ordersTableBody').innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">Lỗi tải dữ liệu đơn hàng.</td></tr>`;
+                document.getElementById('ordersTableBody').innerHTML = `<tr><td colspan="7" class="text-center py-4 text-danger">Lỗi tải dữ liệu đơn hàng từ server.</td></tr>`;
             }
         };
 
-        // Cập nhật số lượng đếm trên các nút bộ lọc
         const updateOrderCounters = () => {
-            const counts = {
-                all: allOrdersData.length,
-                pending: allOrdersData.filter(o => o.status === 'pending').length,
-                processing: allOrdersData.filter(o => o.status === 'processing').length,
-                paid: allOrdersData.filter(o => o.status === 'paid').length,
-                cancelled: allOrdersData.filter(o => o.status === 'cancelled').length,
-            };
-
-            document.getElementById('countAll').innerText = counts.all;
-            document.getElementById('countPending').innerText = counts.pending;
-            document.getElementById('countProcessing').innerText = counts.processing;
-            document.getElementById('countPaid').innerText = counts.paid;
-            document.getElementById('countCancelled').innerText = counts.cancelled;
+            document.getElementById('countAll').innerText = allOrdersData.length;
+            document.getElementById('countPending').innerText = allOrdersData.filter(o => o.status === 'pending').length;
+            document.getElementById('countProcessing').innerText = allOrdersData.filter(o => o.status === 'processing').length;
+            document.getElementById('countPaid').innerText = allOrdersData.filter(o => o.status === 'paid').length;
+            document.getElementById('countCancelled').innerText = allOrdersData.filter(o => o.status === 'cancelled').length;
         };
 
-        // Xử lý khi bấm nút phân loại trạng thái
         const filterOrders = (status, btn) => {
             currentFilter = status;
-            
-            // Đổi active style cho các nút bộ lọc
+            currentPage = 1; // Reset về trang 1 khi đổi bộ lọc
+
             document.querySelectorAll('#orderFilterTabs button').forEach(b => {
                 b.classList.remove('active', 'btn-dark');
-                if(!b.classList.contains('btn-outline-warning') && 
-                   !b.classList.contains('btn-outline-info') && 
-                   !b.classList.contains('btn-outline-success') && 
-                   !b.classList.contains('btn-outline-danger')) {
-                    b.classList.add('btn-outline-dark');
-                }
+                b.classList.add('btn-outline-secondary', 'text-dark');
             });
+            btn.classList.remove('btn-outline-secondary', 'text-dark');
+            btn.classList.add('btn-dark', 'active');
 
-            // Tùy chỉnh màu nút được chọn
-            if(status === 'all') {
-                btn.classList.add('btn-dark', 'active');
-            } else {
-                btn.classList.add('active');
-            }
-
-            // Lọc dữ liệu hiển thị
-            if (status === 'all') {
-                renderOrdersTable(allOrdersData);
-            } else {
-                const filtered = allOrdersData.filter(o => o.status === status);
-                renderOrdersTable(filtered);
-            }
+            applyFilterAndSearch();
         };
 
-        // Hàm render danh sách ra bảng HTML
-        const renderOrdersTable = (orders) => {
+        const handleSearch = () => {
+            currentPage = 1; // Reset về trang 1 khi tìm kiếm
+            applyFilterAndSearch();
+        };
+
+        // Hàm hỗ trợ highlight từ khóa khớp với từ khóa tìm kiếm
+        const highlightMatch = (text, keyword) => {
+            if (!text) return '';
+            if (!keyword) return text;
+            const escapedKeyword = keyword.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            const regex = new RegExp(`(${escapedKeyword})`, 'gi');
+            return text.replace(regex, '<span class="highlight-text">$1</span>');
+        };
+
+        const applyFilterAndSearch = () => {
+            const keyword = document.getElementById('searchOrderInput').value.trim();
+            const lowerKeyword = keyword.toLowerCase();
+
+            // 1. Lọc theo trạng thái
+            let result = allOrdersData;
+            if (currentFilter !== 'all') {
+                result = result.filter(o => o.status === currentFilter);
+            }
+
+            // 2. Lọc theo từ khóa tìm kiếm
+            if (lowerKeyword) {
+                result = result.filter(o =>
+                    (o.orderCode && o.orderCode.toLowerCase().includes(lowerKeyword)) ||
+                    (o.fullName && o.fullName.toLowerCase().includes(lowerKeyword)) ||
+                    (o.phone && o.phone.toLowerCase().includes(lowerKeyword)) ||
+                    (o.loginKeyUsed && o.loginKeyUsed.toLowerCase().includes(lowerKeyword))
+                );
+            }
+
+            filteredOrdersData = result;
+            renderTableWithPagination(keyword);
+        };
+
+        const renderTableWithPagination = (keyword = '') => {
             const tbody = document.getElementById('ordersTableBody');
-            if (orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">Không tìm thấy đơn hàng nào ở trạng thái này.</td></tr>`;
+            const totalItems = filteredOrdersData.length;
+
+            if (totalItems === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Không tìm thấy đơn hàng phù hợp.</td></tr>`;
+                document.getElementById('paginationInfo').innerText = `Hiển thị 0 - 0 của 0 đơn hàng`;
+                document.getElementById('paginationContainer').innerHTML = '';
                 return;
             }
 
+            // Tính toán phân trang (Đúng 10 dòng mỗi trang)
+            const totalPages = Math.ceil(totalItems / rowsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const endIdx = startIdx + rowsPerPage;
+            const paginatedItems = filteredOrdersData.slice(startIdx, endIdx);
+
+            document.getElementById('paginationInfo').innerText = `Hiển thị ${startIdx + 1} - ${Math.min(endIdx, totalItems)} của ${totalItems} đơn hàng`;
+
             tbody.innerHTML = '';
-            orders.forEach(order => {
+            paginatedItems.forEach(order => {
                 let badgeClass = 'bg-secondary';
                 let statusText = order.status;
                 if (order.status === 'pending') { badgeClass = 'bg-warning text-dark'; statusText = 'Chờ xử lý'; }
@@ -208,18 +367,22 @@
                 else if (order.status === 'paid') { badgeClass = 'bg-success'; statusText = 'Đã thanh toán'; }
                 else if (order.status === 'cancelled') { badgeClass = 'bg-danger'; statusText = 'Đã hủy'; }
 
-                let productsHtml = order.products.map(p => `<div>• ${p.productName} (SL: ${p.quantity})</div>`).join('');
+                let productsHtml = order.products.map(p => `<div class="text-muted">• ${p.productName} (SL: ${p.quantity})</div>`).join('');
 
                 let actionButtons = '';
                 if (order.status === 'pending') {
                     actionButtons = `
-                        <button class="btn btn-success btn-sm mb-1 w-100" onclick="confirmOrder('${order._id}')">Xác nhận</button>
-                        <button class="btn btn-outline-danger btn-sm w-100" onclick="cancelOrder('${order._id}')">Hủy</button>
+                        <div class="d-flex justify-content-center gap-1">
+                            <button class="btn btn-success btn-sm px-2 py-1" onclick="confirmOrder('${order._id}')" title="Xác nhận"><i class="fa-solid fa-check"></i></button>
+                            <button class="btn btn-outline-danger btn-sm px-2 py-1" onclick="cancelOrder('${order._id}')" title="Hủy"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
                     `;
                 } else if (order.status === 'processing') {
                     actionButtons = `
-                        <button class="btn btn-primary btn-sm mb-1 w-100" onclick="markAsPaid('${order._id}')"><i class="fa-solid fa-check-double me-1"></i> Đã thanh toán</button>
-                        <button class="btn btn-outline-danger btn-sm w-100" onclick="cancelOrder('${order._id}')">Hủy</button>
+                        <div class="d-flex justify-content-center gap-1">
+                            <button class="btn btn-primary btn-sm px-2 py-1" onclick="markAsPaid('${order._id}')" title="Đã thanh toán"><i class="fa-solid fa-check-double"></i></button>
+                            <button class="btn btn-outline-danger btn-sm px-2 py-1" onclick="cancelOrder('${order._id}')" title="Hủy"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
                     `;
                 } else if (order.status === 'paid') {
                     actionButtons = `<span class="small text-success fw-bold"><i class="fa-solid fa-circle-check me-1"></i> Hoàn tất</span>`;
@@ -229,24 +392,64 @@
 
                 tbody.innerHTML += `
                     <tr>
-                        <td class="fw-bold">${order.orderCode}</td>
+                        <td class="fw-bold font-monospace text-dark">${highlightMatch(order.orderCode, keyword)}</td>
                         <td>
-                            <div class="fw-bold">${order.fullName}</div>
-                            <div class="small text-muted">${order.email || ''}</div>
+                            <div class="fw-semibold text-dark">${highlightMatch(order.fullName, keyword)}</div>
+                            <div class="small text-muted">${order.email || 'Không có email'}</div>
                         </td>
                         <td>
-                            <div>${order.phone}</div>
-                            <div class="small text-muted text-truncate" style="max-width: 150px;" title="${order.address}">${order.address}</div>
+                            <span class="badge bg-light text-dark border font-monospace px-2 py-1">${highlightMatch(order.loginKeyUsed || 'Không có', keyword)}</span>
                         </td>
                         <td>
-                            <div class="small text-muted">${productsHtml}</div>
+                            <div class="fw-medium">${highlightMatch(order.phone, keyword)}</div>
+                            <div class="small text-muted text-truncate" style="max-width: 160px;" title="${order.address}">${order.address}</div>
+                        </td>
+                        <td>
+                            ${productsHtml}
                             <div class="fw-bold text-primary mt-1">${formatMoney(order.total)}</div>
                         </td>
-                        <td><span class="badge ${badgeClass}">${statusText}</span></td>
-                        <td>${actionButtons}</td>
+                        <td><span class="badge ${badgeClass} px-2 py-1">${statusText}</span></td>
+                        <td class="text-center">${actionButtons}</td>
                     </tr>
                 `;
             });
+
+            renderPaginationControls(totalPages);
+        };
+
+        const renderPaginationControls = (totalPages) => {
+            const paginationEl = document.getElementById('paginationContainer');
+            if (totalPages <= 1) {
+                paginationEl.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            // Nút Previous
+            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <button class="page-link" onclick="changePage(${currentPage - 1})">Trước</button>
+            </li>`;
+
+            // Các số trang
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<li class="page-item ${currentPage === i ? 'active' : ''}">
+                    <button class="page-link" onclick="changePage(${i})">${i}</button>
+                </li>`;
+            }
+
+            // Nút Next
+            html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <button class="page-link" onclick="changePage(${currentPage + 1})">Sau</button>
+            </li>`;
+
+            paginationEl.innerHTML = html;
+        };
+
+        const changePage = (page) => {
+            if (page < 1) return;
+            currentPage = page;
+            const keyword = document.getElementById('searchOrderInput').value.trim();
+            renderTableWithPagination(keyword);
         };
 
         const confirmOrder = async (id) => {
@@ -257,7 +460,7 @@
             });
             const result = await res.json();
             if (result.success) {
-                Swal.fire('Thành công', result.message, 'success');
+                Swal.fire({ icon: 'success', title: 'Thành công', text: result.message, timer: 1500, showConfirmButton: false });
                 loadOrders();
             } else {
                 Swal.fire('Lỗi', result.message, 'error');
@@ -265,6 +468,19 @@
         };
 
         const cancelOrder = async (id) => {
+            const confirmResult = await Swal.fire({
+                title: 'Xác nhận hủy đơn hàng?',
+                text: "Hành động này không thể hoàn tác!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Đồng ý hủy',
+                cancelButtonText: 'Bỏ qua'
+            });
+
+            if (!confirmResult.isConfirmed) return;
+
             const token = localStorage.getItem('ADMIN_TOKEN');
             const res = await fetch(`/api/orders/admin/${id}/cancel`, {
                 method: 'PUT',
@@ -272,7 +488,7 @@
             });
             const result = await res.json();
             if (result.success) {
-                Swal.fire('Thành công', 'Đã hủy đơn hàng', 'success');
+                Swal.fire({ icon: 'success', title: 'Đã hủy đơn hàng', timer: 1500, showConfirmButton: false });
                 loadOrders();
             } else {
                 Swal.fire('Lỗi', result.message, 'error');
@@ -287,12 +503,50 @@
             });
             const result = await res.json();
             if (result.success) {
-                Swal.fire('Thành công', 'Đã cập nhật trạng thái thanh toán!', 'success');
+                Swal.fire({ icon: 'success', title: 'Đã thanh toán thành công!', timer: 1500, showConfirmButton: false });
                 loadOrders();
             } else {
                 Swal.fire('Lỗi', result.message, 'error');
             }
         };
+        // Hàm tự động cập nhật số lượng đơn chờ xử lý cho Sidebar theo thời gian thực
+        const updateGlobalPendingBadge = async () => {
+            try {
+                const token = localStorage.getItem('ADMIN_TOKEN');
+                if (!token) return;
+
+                const res = await fetch('/api/orders/admin/all', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+
+                if (result.success && Array.isArray(result.data)) {
+                    // Đếm số lượng đơn hàng có trạng thái 'pending' (Chờ xử lý)
+                    const pendingCount = result.data.filter(order => order.status === 'pending').length;
+
+                    const badgeEl = document.getElementById('pendingBadge');
+                    if (badgeEl) {
+                        if (pendingCount > 0) {
+                            badgeEl.innerText = pendingCount;
+                            badgeEl.style.display = 'inline-block'; // Hiện badge khi có đơn chờ
+                        } else {
+                            badgeEl.style.display = 'none'; // Ẩn badge nếu không có đơn nào
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Lỗi cập nhật huy hiệu đơn hàng:', err);
+            }
+        };
+
+        // Gọi ngay khi trang tải xong và thiết lập lặp lại mỗi 10 giây (real-time polling)
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdminAuth();
+            loadOrders(); // Hoặc hàm tải dữ liệu tương ứng của trang đó
+
+            updateGlobalPendingBadge();
+            setInterval(updateGlobalPendingBadge, 10000);
+        });
 
         const adminLogout = () => {
             localStorage.removeItem('ADMIN_TOKEN');
@@ -305,4 +559,5 @@
         });
     </script>
 </body>
+
 </html>

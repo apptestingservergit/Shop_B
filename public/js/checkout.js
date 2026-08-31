@@ -82,7 +82,6 @@ document.getElementById('checkoutForm').addEventListener('submit', function(e) {
         cancelButtonColor: '#6b7280',
         confirmButtonText: 'XÁC NHẬN',
         cancelButtonText: 'Hủy',
-        // preConfirm dùng để kiểm tra checkbox trước khi cho phép bấm XÁC NHẬN
         preConfirm: () => {
             const isChecked = document.getElementById('confirmCheckbox').checked;
             if (!isChecked) {
@@ -93,7 +92,6 @@ document.getElementById('checkoutForm').addEventListener('submit', function(e) {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // NẾU NHẤN XÁC NHẬN -> Bắt đầu gọi API gửi đơn hàng
             submitOrder(customerData);
         }
     });
@@ -105,7 +103,7 @@ const submitOrder = async (customerData) => {
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> ĐANG GỬI ĐƠN...';
     btn.disabled = true;
 
-    // Lấy KEY đang lưu trong localStorage ra để gửi kèm trong Header
+    // Lấy KEY đang lưu trong localStorage ra
     const currentKey = localStorage.getItem('YOUTH_SHOP_KEY');
 
     // Định dạng lại mảng sản phẩm cho đúng với Backend yêu cầu
@@ -124,7 +122,8 @@ const submitOrder = async (customerData) => {
             },
             body: JSON.stringify({
                 ...customerData,
-                items: itemsPayload
+                items: itemsPayload,
+                loginKey: currentKey // ---> BỔ SUNG TRƯỜNG NÀY ĐỂ BACKEND LƯU VÀO DATABASE & HIỂN THỊ TRÊN ADMIN <---
             })
         });
 
@@ -140,7 +139,6 @@ const submitOrder = async (customerData) => {
                 html: `Mã đơn hàng của bạn là: <strong class="text-primary">${result.data.orderCode}</strong><br>Nhân viên sẽ liên hệ với bạn trong 3-5 phút tới.`,
                 confirmButtonColor: '#111827'
             }).then(() => {
-                // Chuyển hướng về trang chủ
                 window.location.href = '/index.html';
             });
         } else {
@@ -169,12 +167,10 @@ const submitOrder = async (customerData) => {
 
 // 4. Khởi chạy khi load trang
 document.addEventListener('DOMContentLoaded', () => {
-    // Nếu chưa nhập KEY
     if (!localStorage.getItem('YOUTH_SHOP_KEY')) {
         window.location.href = '/key.html';
         return;
     }
-    // Nếu giỏ hàng trống, không cho vào trang Checkout
     if (cart.length === 0) {
         window.location.href = '/cart.html';
         return;
