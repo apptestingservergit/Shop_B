@@ -65,7 +65,7 @@ app.use('/api', (req, res) => {
 
 // 8. Chạy Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`=================================`);
     console.log(`🚀 Server đang chạy tại cổng: ${PORT}`);
     console.log(`🌐 Truy cập: http://localhost:${PORT}`);

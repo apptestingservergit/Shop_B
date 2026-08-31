@@ -1,24 +1,43 @@
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 
-const sendEmail = async (options) => {
-    const transporter = nodemailer.createTransport({
-        host: 'smtp-relay.brevo.com',
-        port: 465,
-        secure: true, // Bắt buộc true đối với cổng 465
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS // Lúc này dùng lại chuỗi xsmtpsib-... bình thường
-        }
-    });
+const sendEmail = async ({ email, subject, html }) => {
+    try {
+        const response = await axios.post(
+            'https://api.brevo.com/v3/smtp/email',
+            {
+                sender: {
+                    name: 'YOUTH SHOP',
+                    email: process.env.EMAIL_USER
+                },
+                to: [
+                    {
+                        email
+                    }
+                ],
+                subject,
+                htmlContent: html
+            },
+            {
+                headers: {
+                    accept: 'application/json',
+                    'api-key': process.env.EMAIL_PASS,
+                    'content-type': 'application/json'
+                },
+                timeout: 15000
+            }
+        );
 
-    const mailOptions = {
-        from: `"YOUTH SHOP" <lek08670@gmail.com>`,
-        to: options.email,
-        subject: options.subject,
-        html: options.html
-    };
+        console.log('[BREVO EMAIL] Gửi thành công:', response.data);
 
-    return await transporter.sendMail(mailOptions);
+        return response.data;
+    } catch (error) {
+        console.error(
+            '[BREVO EMAIL ERROR]:',
+            error.response?.data || error.message
+        );
+
+        throw error;
+    }
 };
 
 module.exports = sendEmail;
