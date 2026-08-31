@@ -1,24 +1,23 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-    // 1. Tạo transporter sử dụng dịch vụ SMTP của Gmail
     const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false, // Bắt buộc false đối với port 587
         auth: {
-            user: process.env.MAIL_USER, // Email của bạn (đặt trong .env)
-            pass: process.env.MAIL_PASS  // Mật khẩu ứng dụng App Password (đặt trong .env)
+            user: process.env.EMAIL_USER, // Sẽ nhận giá trị b73caf001@smtp-brevo.com từ Render
+            pass: process.env.EMAIL_PASS  // Sẽ nhận chuỗi SMTP Key dài từ Render
         }
     });
 
-    // 2. Cấu hình nội dung email
     const mailOptions = {
-        from: `"YOUTH SHOP" <${process.env.MAIL_USER}>`,
-        to: options.email, // Email người nhận (Admin hoặc khách hàng)
+        from: `"YOUTH SHOP" <${process.env.EMAIL_USER}>`,
+        to: options.email,
         subject: options.subject,
         html: options.html
     };
 
-    // 3. Tiến hành gửi mail
     await transporter.sendMail(mailOptions);
 };
 
