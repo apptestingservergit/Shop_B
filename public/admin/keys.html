@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý KEY - Admin YOUTH SHOP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .sidebar { width: 260px; min-height: 100vh; background: #111827; color: white; position: fixed; top: 0; left: 0; z-index: 100; transition: transform 0.3s ease-in-out; }
+        .sidebar a { color: #9ca3af; text-decoration: none; padding: 12px 20px; display: block; transition: var(--transition); border-radius: 8px; margin: 4px 12px; }
+        .sidebar a:hover, .sidebar a.active { color: white; background: rgba(255, 255, 255, 0.1); }
+        .main-content { margin-left: 260px; padding: 30px; }
+
+        /* Responsive cho Mobile */
+        @media (max-width: 991.98px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; padding: 15px !important; }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- MOBILE NAVBAR HEADER (Chỉ hiện trên điện thoại) -->
+    <nav class="navbar navbar-dark bg-dark d-lg-none px-3 py-2">
+        <button class="btn btn-outline-light btn-sm" onclick="toggleSidebar()">
+            <i class="fa-solid fa-bars fs-5"></i>
+        </button>
+        <span class="navbar-brand fs-6 fw-bold">ADMIN PANEL</span>
+        <button class="btn btn-outline-danger btn-sm" onclick="adminLogout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </nav>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar d-flex flex-column py-4" id="adminSidebar">
+        <div class="d-flex justify-content-between align-items-center px-3 mb-4 d-lg-none">
+            <h4 class="fw-bold tracking-wider mb-0 text-white">MENU</h4>
+            <button class="btn text-white fs-4" onclick="toggleSidebar()">&times;</button>
+        </div>
+        <h4 class="text-center fw-bold mb-4 tracking-wider d-none d-lg-block">ADMIN PANEL</h4>
+        <div class="flex-grow-1">
+            <a href="/admin/dashboard.html"><i class="fa-solid fa-chart-pie me-2"></i> Dashboard</a>
+            <a href="/admin/orders.html"><i class="fa-solid fa-box-open me-2"></i> Quản lý Đơn hàng</a>
+            <a href="/admin/products.html"><i class="fa-solid fa-shirt me-2"></i> Quản lý Sản phẩm</a>
+            <a href="/admin/categories.html"><i class="fa-solid fa-list me-2"></i> Quản lý Danh mục</a>
+            <a href="/admin/keys.html" class="active"><i class="fa-solid fa-key me-2"></i> Quản lý KEY</a>
+            <a href="/admin/customers.html"><i class="fa-solid fa-users me-2"></i> Khách hàng VIP</a>
+            <a href="/admin/top-products.html" ><i class="fa-solid fa-fire me-2"></i> Top Bán chạy</a>
+            <a href="/admin/settings.html"><i class="fa-solid fa-gear me-2"></i> Cài đặt</a>
+        </div>
+        <div class="px-3 d-none d-lg-block">
+            <button class="btn btn-outline-danger w-100 btn-sm" onclick="adminLogout()"><i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold fs-4">Quản lý Mã Truy Cập (KEY)</h2>
+            <button class="btn btn-youth btn-sm" data-bs-toggle="modal" data-bs-target="#addKeyModal">
+                <i class="fa-solid fa-plus me-1"></i> Tạo KEY mới
+            </button>
+        </div>
+
+        <div class="youth-card p-3 p-md-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã KEY</th>
+                            <th>Trạng thái</th>
+                            <th>Thời hạn</th>
+                            <th>Ngày tạo</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="keysTableBody">
+                        <tr><td colspan="5" class="text-center py-4">Đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TẠO KEY -->
+    <div class="modal fade" id="addKeyModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Tạo KEY truy cập mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addKeyForm">
+                        <div class="mb-3">
+                            <label class="form-label">Mã KEY <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="keyCode" placeholder="VD: YOUTHSHOPVIP2026" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Thời hạn sử dụng</label>
+                            <select class="form-select" id="keyDuration">
+                                <option value="">Không giới hạn (Vĩnh viễn)</option>
+                                <option value="1">1 giờ</option>
+                                <option value="6">6 giờ</option>
+                                <option value="12">12 giờ</option>
+                                <option value="24">24 giờ (1 ngày)</option>
+                                <option value="72">3 ngày</option>
+                                <option value="168">7 ngày</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-youth w-100 py-2">TẠO KEY</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const checkAdminAuth = () => {
+            if (!localStorage.getItem('ADMIN_TOKEN')) window.location.href = '/admin/login.html';
+        };
+
+        // Hàm bật/tắt Sidebar trên mobile
+        const toggleSidebar = () => {
+            document.getElementById('adminSidebar').classList.toggle('show');
+        };
+
+        const loadKeys = async () => {
+            try {
+                const token = localStorage.getItem('ADMIN_TOKEN');
+                const res = await fetch('/api/keys', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+                if (result.success) {
+                    const tbody = document.getElementById('keysTableBody');
+                    if (result.data.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Chưa có KEY nào.</td></tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = '';
+                    result.data.forEach(k => {
+                        const statusBadge = k.status === 'active' ? '<span class="badge bg-success">Hoạt động</span>' : '<span class="badge bg-danger">Vô hiệu hóa</span>';
+                        let expiresText = k.expiresAt ? new Date(k.expiresAt).toLocaleString('vi-VN') : 'Vĩnh viễn';
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><code class="fw-bold fs-6">${k.key}</code></td>
+                                <td>${statusBadge}</td>
+                                <td>${expiresText}</td>
+                                <td class="text-muted small">${new Date(k.createdAt).toLocaleString('vi-VN')}</td>
+                                <td>
+                                    <button class="btn btn-outline-warning btn-sm me-1" onclick="toggleKeyStatus('${k._id}', '${k.status}')" title="Bật/Tắt">
+                                        <i class="fa-solid fa-power-off"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteKey('${k._id}')" title="Xóa">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        document.getElementById('addKeyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('ADMIN_TOKEN');
+            const key = document.getElementById('keyCode').value.trim();
+            const expiresInHours = document.getElementById('keyDuration').value;
+
+            const res = await fetch('/api/keys', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ key, expiresInHours: expiresInHours ? Number(expiresInHours) : null })
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                Swal.fire('Thành công', 'Tạo KEY mới thành công!', 'success');
+                document.getElementById('addKeyForm').reset();
+                bootstrap.Modal.getInstance(document.getElementById('addKeyModal')).hide();
+                loadKeys();
+            } else {
+                Swal.fire('Lỗi', result.message, 'error');
+            }
+        });
+
+        const toggleKeyStatus = async (id, currentStatus) => {
+            const token = localStorage.getItem('ADMIN_TOKEN');
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+            const res = await fetch(`/api/keys/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ status: newStatus })
+            });
+            const data = await res.json();
+            if (data.success) {
+                loadKeys();
+            } else {
+                Swal.fire('Lỗi', data.message, 'error');
+            }
+        };
+
+        const deleteKey = async (id) => {
+            Swal.fire({
+                title: 'Xóa KEY?',
+                text: "Hành động này không thể hoàn tác.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Đồng ý'
+            }).then(async (res) => {
+                if (res.isConfirmed) {
+                    const token = localStorage.getItem('ADMIN_TOKEN');
+                    const response = await fetch(`/api/keys/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        Swal.fire('Đã xóa', data.message, 'success');
+                        loadKeys();
+                    }
+                }
+            });
+        };
+
+        const adminLogout = () => { localStorage.removeItem('ADMIN_TOKEN'); window.location.href = '/admin/login.html'; };
+
+        document.addEventListener('DOMContentLoaded', () => { checkAdminAuth(); loadKeys(); });
+    </script>
+</body>
+</html>

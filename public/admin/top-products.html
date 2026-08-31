@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sản phẩm Bán chạy - Admin YOUTH SHOP</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .sidebar { width: 260px; min-height: 100vh; background: #111827; color: white; position: fixed; top: 0; left: 0; z-index: 100; transition: transform 0.3s ease-in-out; }
+        .sidebar a { color: #9ca3af; text-decoration: none; padding: 12px 20px; display: block; transition: var(--transition); border-radius: 8px; margin: 4px 12px; }
+        .sidebar a:hover, .sidebar a.active { color: white; background: rgba(255, 255, 255, 0.1); }
+        .main-content { margin-left: 260px; padding: 30px; }
+        .product-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; }
+        .top-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Responsive cho Mobile */
+        @media (max-width: 991.98px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; padding: 15px !important; }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- MOBILE NAVBAR HEADER (Chỉ hiện trên điện thoại) -->
+    <nav class="navbar navbar-dark bg-dark d-lg-none px-3 py-2">
+        <button class="btn btn-outline-light btn-sm" onclick="toggleSidebar()">
+            <i class="fa-solid fa-bars fs-5"></i>
+        </button>
+        <span class="navbar-brand fs-6 fw-bold">ADMIN PANEL</span>
+        <button class="btn btn-outline-danger btn-sm" onclick="adminLogout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </nav>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar d-flex flex-column py-4" id="adminSidebar">
+        <div class="d-flex justify-content-between align-items-center px-3 mb-4 d-lg-none">
+            <h4 class="fw-bold tracking-wider mb-0 text-white">MENU</h4>
+            <button class="btn text-white fs-4" onclick="toggleSidebar()">&times;</button>
+        </div>
+        <h4 class="text-center fw-bold mb-4 tracking-wider d-none d-lg-block">ADMIN PANEL</h4>
+        <div class="flex-grow-1">
+            <a href="/admin/dashboard.html"><i class="fa-solid fa-chart-pie me-2"></i> Dashboard</a>
+            <a href="/admin/orders.html"><i class="fa-solid fa-box-open me-2"></i> Quản lý Đơn hàng</a>
+            <a href="/admin/products.html"><i class="fa-solid fa-shirt me-2"></i> Quản lý Sản phẩm</a>
+            <a href="/admin/categories.html"><i class="fa-solid fa-list me-2"></i> Quản lý Danh mục</a>
+            <a href="/admin/keys.html"><i class="fa-solid fa-key me-2"></i> Quản lý KEY</a>
+            <a href="/admin/customers.html"><i class="fa-solid fa-users me-2"></i> Khách hàng VIP</a>
+            <a href="/admin/top-products.html" class="active"><i class="fa-solid fa-fire me-2"></i> Top Bán chạy</a>
+            <a href="/admin/settings.html"><i class="fa-solid fa-gear me-2"></i> Cài đặt</a>
+        </div>
+        <div class="px-3 d-none d-lg-block">
+            <button class="btn btn-outline-danger w-100 btn-sm" onclick="adminLogout()"><i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold fs-4 mb-1">Xếp hạng Sản phẩm Bán chạy</h2>
+                <p class="text-muted small mb-0">Thống kê dựa trên các đơn hàng đã thanh toán hoàn tất (`paid`)</p>
+            </div>
+        </div>
+
+        <div class="youth-card p-3 p-md-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Thứ hạng</th>
+                            <th>Ảnh</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Giá bán</th>
+                            <th>Số lượng đã bán</th>
+                            <th>Doanh thu đóng góp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topProductsTableBody">
+                        <tr>
+                            <td colspan="6" class="text-center py-4">Đang tính toán dữ liệu bán hàng...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS & SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const formatMoney = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
+        const checkAdminAuth = () => {
+            const token = localStorage.getItem('ADMIN_TOKEN');
+            if (!token) window.location.href = '/admin/login.html';
+        };
+
+        // Hàm bật/tắt Sidebar trên mobile
+        const toggleSidebar = () => {
+            document.getElementById('adminSidebar').classList.toggle('show');
+        };
+
+        const loadTopProducts = async () => {
+            try {
+                const token = localStorage.getItem('ADMIN_TOKEN');
+                
+                // Lấy danh sách toàn bộ đơn hàng và danh sách sản phẩm gốc để đối soát ảnh/giá nếu cần
+                const resOrders = await fetch('/api/orders/admin/all', { headers: { 'Authorization': `Bearer ${token}` } });
+                const resultOrders = await resOrders.json();
+
+                if (resultOrders.success) {
+                    const tbody = document.getElementById('topProductsTableBody');
+                    const orders = resultOrders.data;
+
+                    // Gom nhóm sản phẩm từ các đơn hàng có trạng thái 'paid'
+                    const productSalesMap = new Map();
+
+                    orders.forEach(order => {
+                        if (order.status === 'paid' && order.products && order.products.length > 0) {
+                            order.products.forEach(item => {
+                                // Xác định ID sản phẩm (phòng hờ cấu trúc lưu trữ item có thể là object hoặc ID)
+                                const prodId = item.product || item.productId || item.productName;
+                                
+                                if (!productSalesMap.has(prodId)) {
+                                    productSalesMap.set(prodId, {
+                                        name: item.productName || 'Sản phẩm không rõ',
+                                        image: (item.image || (item.images && item.images[0])) || 'https://via.placeholder.com/50',
+                                        price: item.price || 0,
+                                        totalSold: 0,
+                                        totalRevenue: 0
+                                    });
+                                }
+
+                                const prodStats = productSalesMap.get(prodId);
+                                const qty = Number(item.quantity) || 1;
+                                prodStats.totalSold += qty;
+                                prodStats.totalRevenue += (prodStats.price * qty);
+                            });
+                        }
+                    });
+
+                    if (productSalesMap.size === 0) {
+                        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">Chưa có đơn hàng nào hoàn tất (Đã thanh toán) để thống kê.</td></tr>`;
+                        return;
+                    }
+
+                    // Sắp xếp danh sách sản phẩm theo số lượng đã bán giảm dần (Top bán chạy nhất)
+                    const sortedTopProducts = Array.from(productSalesMap.values()).sort((a, b) => b.totalSold - a.totalSold);
+
+                    tbody.innerHTML = '';
+                    sortedTopProducts.forEach((p, index) => {
+                        let rankBadge = `<span class="badge bg-secondary">Top ${index + 1}</span>`;
+                        if (index === 0) rankBadge = `<span class="badge top-badge px-2 py-1"><i class="fa-solid fa-crown me-1"></i> TOP 1 HOT</span>`;
+                        else if (index === 1) rankBadge = `<span class="badge bg-warning text-dark px-2 py-1">TOP 2</span>`;
+                        else if (index === 2) rankBadge = `<span class="badge bg-info text-dark px-2 py-1">TOP 3</span>`;
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${rankBadge}</td>
+                                <td><img src="${p.image}" class="product-thumb" alt=""></td>
+                                <td class="fw-bold">${p.name}</td>
+                                <td class="text-muted">${formatMoney(p.price)}</td>
+                                <td><span class="badge bg-dark fs-6">${p.totalSold} đã bán</span></td>
+                                <td class="fw-bold text-success">${formatMoney(p.totalRevenue)}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (err) {
+                console.error('Lỗi tải top sản phẩm:', err);
+                document.getElementById('topProductsTableBody').innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">Lỗi tải dữ liệu máy chủ.</td></tr>`;
+            }
+        };
+
+        const adminLogout = () => { 
+            localStorage.removeItem('ADMIN_TOKEN'); 
+            window.location.href = '/admin/login.html'; 
+        };
+
+        document.addEventListener('DOMContentLoaded', () => { 
+            checkAdminAuth(); 
+            loadTopProducts(); 
+        });
+    </script>
+</body>
+</html>

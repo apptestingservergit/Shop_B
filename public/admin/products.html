@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Sản phẩm - Admin YOUTH SHOP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .sidebar { width: 260px; min-height: 100vh; background: #111827; color: white; position: fixed; top: 0; left: 0; z-index: 100; transition: transform 0.3s ease-in-out; }
+        .sidebar a { color: #9ca3af; text-decoration: none; padding: 12px 20px; display: block; transition: var(--transition); border-radius: 8px; margin: 4px 12px; }
+        .sidebar a:hover, .sidebar a.active { color: white; background: rgba(255, 255, 255, 0.1); }
+        .main-content { margin-left: 260px; padding: 30px; }
+        .product-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; }
+
+        /* Responsive cho Mobile */
+        @media (max-width: 991.98px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; padding: 15px !important; }
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- MOBILE NAVBAR HEADER (Chỉ hiện trên điện thoại) -->
+    <nav class="navbar navbar-dark bg-dark d-lg-none px-3 py-2">
+        <button class="btn btn-outline-light btn-sm" onclick="toggleSidebar()">
+            <i class="fa-solid fa-bars fs-5"></i>
+        </button>
+        <span class="navbar-brand fs-6 fw-bold">ADMIN PANEL</span>
+        <button class="btn btn-outline-danger btn-sm" onclick="adminLogout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </nav>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar d-flex flex-column py-4" id="adminSidebar">
+        <div class="d-flex justify-content-between align-items-center px-3 mb-4 d-lg-none">
+            <h4 class="fw-bold tracking-wider mb-0 text-white">MENU</h4>
+            <button class="btn text-white fs-4" onclick="toggleSidebar()">&times;</button>
+        </div>
+        <h4 class="text-center fw-bold mb-4 tracking-wider d-none d-lg-block">ADMIN PANEL</h4>
+        <div class="flex-grow-1">
+            <a href="/admin/dashboard.html"><i class="fa-solid fa-chart-pie me-2"></i> Dashboard</a>
+            <a href="/admin/orders.html"><i class="fa-solid fa-box-open me-2"></i> Quản lý Đơn hàng</a>
+            <a href="/admin/products.html" class="active"><i class="fa-solid fa-shirt me-2"></i> Quản lý Sản phẩm</a>
+            <a href="/admin/categories.html"><i class="fa-solid fa-list me-2"></i> Quản lý Danh mục</a>
+            <a href="/admin/keys.html"><i class="fa-solid fa-key me-2"></i> Quản lý KEY</a>
+            <a href="/admin/customers.html"><i class="fa-solid fa-users me-2"></i> Khách hàng VIP</a>
+            <a href="/admin/top-products.html" ><i class="fa-solid fa-fire me-2"></i> Top Bán chạy</a>
+            <a href="/admin/settings.html"><i class="fa-solid fa-gear me-2"></i> Cài đặt</a>
+        </div>
+        <div class="px-3 d-none d-lg-block">
+            <button class="btn btn-outline-danger w-100 btn-sm" onclick="adminLogout()"><i class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold fs-4">Quản lý Sản phẩm</h2>
+            <button class="btn btn-youth btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                <i class="fa-solid fa-plus me-1"></i> Thêm sản phẩm
+            </button>
+        </div>
+
+        <div class="youth-card p-3 p-md-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Ảnh</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Danh mục</th>
+                            <th>Giá</th>
+                            <th>Tồn kho</th>
+                            <th>Đã bán</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        <tr><td colspan="7" class="text-center py-4">Đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL THÊM SẢN PHẨM -->
+    <div class="modal fade" id="addProductModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Thêm sản phẩm mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addProductForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="prodName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Danh mục <span class="text-danger">*</span></label>
+                                <select class="form-select" id="prodCategory" required>
+                                    <option value="">Đang tải danh mục...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Giá gốc (VNĐ) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="prodPrice" min="0" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Số lượng tồn kho <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="prodStock" min="0" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Link hình ảnh</label>
+                            <input type="text" class="form-control" id="prodImage" placeholder="https://example.com/image.jpg">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả ngắn</label>
+                            <textarea class="form-control" id="prodDesc" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-youth w-100 py-2">LƯU SẢN PHẨM</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SỬA SẢN PHẨM -->
+    <div class="modal fade" id="editProductModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Chỉnh sửa sản phẩm</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editProductForm">
+                        <input type="hidden" id="editProdId">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editProdName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Danh mục <span class="text-danger">*</span></label>
+                                <select class="form-select" id="editProdCategory" required>
+                                    <option value="">Đang tải danh mục...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Giá gốc (VNĐ) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editProdPrice" min="0" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Số lượng tồn kho <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editProdStock" min="0" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Link hình ảnh</label>
+                            <input type="text" class="form-control" id="editProdImage">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả ngắn</label>
+                            <textarea class="form-control" id="editProdDesc" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-youth w-100 py-2">CẬP NHẬT SẢN PHẨM</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        let categoriesList = [];
+        const formatMoney = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
+        const checkAdminAuth = () => {
+            if (!localStorage.getItem('ADMIN_TOKEN')) window.location.href = '/admin/login.html';
+        };
+
+        const toggleSidebar = () => {
+            document.getElementById('adminSidebar').classList.toggle('show');
+        };
+
+        const loadCategories = async () => {
+            try {
+                const res = await fetch('/api/categories');
+                const result = await res.json();
+                if (result.success) {
+                    categoriesList = result.data;
+                    const selects = [document.getElementById('prodCategory'), document.getElementById('editProdCategory')];
+                    selects.forEach(sel => {
+                        sel.innerHTML = '<option value="">Chọn danh mục</option>';
+                        categoriesList.forEach(cat => {
+                            sel.innerHTML += `<option value="${cat._id}">${cat.name}</option>`;
+                        });
+                    });
+                }
+            } catch (err) { console.error(err); }
+        };
+
+        const loadProducts = async () => {
+            try {
+                const token = localStorage.getItem('ADMIN_TOKEN');
+                const res = await fetch('/api/products/admin/all', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    const tbody = document.getElementById('productsTableBody');
+                    if (result.data.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Chưa có sản phẩm nào.</td></tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = '';
+                    result.data.forEach(product => {
+                        const img = (product.images && product.images.length > 0) ? product.images[0] : 'https://via.placeholder.com/50';
+                        const catName = product.category ? product.category.name : 'Chưa phân loại';
+                        const catId = product.category ? product.category._id : '';
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><img src="${img}" class="product-thumb" alt=""></td>
+                                <td class="fw-bold">${product.name}</td>
+                                <td><span class="badge bg-secondary">${catName}</span></td>
+                                <td class="fw-medium">${formatMoney(product.price)}</td>
+                                <td>${product.stockQuantity}</td>
+                                <td>${product.soldQuantity || 0}</td>
+                                <td>
+                                    <button class="btn btn-outline-primary btn-sm me-1" onclick="openEditModal('${product._id}', '${product.name}', '${catId}', ${product.price}, ${product.stockQuantity}, '${img}', '${product.shortDescription || ''}')" title="Sửa">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" onclick="deleteProduct('${product._id}')" title="Xóa">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (err) { console.error(err); }
+        };
+
+        document.getElementById('addProductForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('ADMIN_TOKEN');
+            const newProduct = {
+                name: document.getElementById('prodName').value.trim(),
+                category: document.getElementById('prodCategory').value,
+                price: Number(document.getElementById('prodPrice').value),
+                stockQuantity: Number(document.getElementById('prodStock').value),
+                images: [document.getElementById('prodImage').value.trim() || 'https://via.placeholder.com/400'],
+                shortDescription: document.getElementById('prodDesc').value.trim()
+            };
+
+            const res = await fetch('/api/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(newProduct)
+            });
+            const result = await res.json();
+            if (result.success) {
+                Swal.fire('Thành công', 'Thêm sản phẩm thành công!', 'success');
+                document.getElementById('addProductForm').reset();
+                bootstrap.Modal.getInstance(document.getElementById('addProductModal')).hide();
+                loadProducts();
+            } else { Swal.fire('Lỗi', result.message, 'error'); }
+        });
+
+        window.openEditModal = (id, name, catId, price, stock, image, desc) => {
+            document.getElementById('editProdId').value = id;
+            document.getElementById('editProdName').value = name;
+            document.getElementById('editProdCategory').value = catId;
+            document.getElementById('editProdPrice').value = price;
+            document.getElementById('editProdStock').value = stock;
+            document.getElementById('editProdImage').value = image;
+            document.getElementById('editProdDesc').value = desc;
+
+            const editModal = new bootstrap.Modal(document.getElementById('editProductModal'));
+            editModal.show();
+        };
+
+        document.getElementById('editProductForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('ADMIN_TOKEN');
+            const id = document.getElementById('editProdId').value;
+
+            const updatedData = {
+                name: document.getElementById('editProdName').value.trim(),
+                category: document.getElementById('editProdCategory').value,
+                price: Number(document.getElementById('editProdPrice').value),
+                stockQuantity: Number(document.getElementById('editProdStock').value),
+                images: [document.getElementById('editProdImage').value.trim() || 'https://via.placeholder.com/400'],
+                shortDescription: document.getElementById('editProdDesc').value.trim()
+            };
+
+            const res = await fetch(`/api/products/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(updatedData)
+            });
+            const result = await res.json();
+            if (result.success) {
+                Swal.fire('Thành công', 'Cập nhật sản phẩm thành công!', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('editProductModal')).hide();
+                loadProducts();
+            } else { Swal.fire('Lỗi', result.message, 'error'); }
+        });
+
+        const deleteProduct = async (id) => {
+            Swal.fire({
+                title: 'Xóa sản phẩm?',
+                text: "Sản phẩm sẽ bị ẩn khỏi hệ thống.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Đồng ý'
+            }).then(async (res) => {
+                if (res.isConfirmed) {
+                    const token = localStorage.getItem('ADMIN_TOKEN');
+                    const response = await fetch(`/api/products/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        Swal.fire('Đã xóa', data.message, 'success');
+                        loadProducts();
+                    }
+                }
+            });
+        };
+
+        const adminLogout = () => { localStorage.removeItem('ADMIN_TOKEN'); window.location.href = '/admin/login.html'; };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdminAuth();
+            loadCategories();
+            loadProducts();
+        });
+    </script>
+</body>
+</html>

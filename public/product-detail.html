@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết sản phẩm - YOUTH SHOP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .navbar-youth { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: var(--shadow-sm); }
+        .navbar-brand { font-weight: 700; letter-spacing: 1px; color: var(--primary-color) !important; }
+        .detail-img { width: 100%; height: 450px; object-fit: cover; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+        .product-price-large { font-size: 1.8rem; font-weight: 700; color: var(--accent-color); }
+        .qty-input { width: 70px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
+    <!-- HEADER -->
+    <nav class="navbar navbar-expand-lg navbar-youth sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand" href="/index.html"><i class="fa-solid fa-arrow-left me-2"></i> TRANG CHỦ</a>
+            <div class="d-flex align-items-center gap-3">
+                <a href="/cart.html" class="position-relative text-dark text-decoration-none">
+                    <i class="fa-solid fa-cart-shopping fs-5"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">0</span>
+                </a>
+                <button class="btn btn-outline-danger btn-sm ms-3" onclick="logout()">Thoát</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CHI TIẾT SẢN PHẨM -->
+    <div class="container my-5 flex-grow-1">
+        <div class="youth-card p-4 p-md-5 bg-white" id="productDetailContainer">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+                <p class="mt-2 text-muted">Đang tải thông tin sản phẩm...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-white py-4 mt-auto border-top">
+        <div class="container text-center text-muted"><p class="mb-0">&copy; 2026 YOUTH SHOP. All rights reserved.</p></div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        let currentProduct = null;
+        let cart = JSON.parse(localStorage.getItem('YOUTH_SHOP_CART')) || [];
+
+        const formatMoney = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
+        const updateCartBadge = () => {
+            const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+            const badge = document.getElementById('cartCount');
+            if (badge) badge.innerText = totalItems;
+        };
+
+        const loadProductDetail = async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+
+            if (!productId) {
+                window.location.href = '/index.html';
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/products`);
+                const data = await res.json();
+
+                if (data.success) {
+                    currentProduct = data.data.find(p => p._id === productId);
+                    const container = document.getElementById('productDetailContainer');
+
+                    if (!currentProduct) {
+                        container.innerHTML = `<div class="text-center py-5 text-muted">Không tìm thấy sản phẩm!</div>`;
+                        return;
+                    }
+
+                    const imageUrl = (currentProduct.images && currentProduct.images.length > 0) ? currentProduct.images[0] : 'https://via.placeholder.com/600';
+                    const categoryName = currentProduct.category ? currentProduct.category.name : 'Chưa phân loại';
+                    const isOutOfStock = currentProduct.stockQuantity <= 0;
+
+                    container.innerHTML = `
+                        <div class="row g-5 align-items-center">
+                            <div class="col-md-6">
+                                <img src="${imageUrl}" class="detail-img" alt="${currentProduct.name}">
+                            </div>
+                            <div class="col-md-6">
+                                <span class="badge bg-secondary mb-2">${categoryName}</span>
+                                <h2 class="fw-bold mb-3">${currentProduct.name}</h2>
+                                <div class="product-price-large mb-3">${formatMoney(currentProduct.price)}</div>
+                                
+                                <p class="text-muted mb-4">${currentProduct.shortDescription || 'Chưa có mô tả chi tiết cho sản phẩm này.'}</p>
+                                
+                                <div class="mb-4">
+                                    <span class="text-muted">Tình trạng tồn kho: </span>
+                                    <strong class="${isOutOfStock ? 'text-danger' : 'text-success'}">${isOutOfStock ? 'Hết hàng' : `Còn ${currentProduct.stockQuantity} sản phẩm`}</strong>
+                                </div>
+
+                                ${isOutOfStock ? `
+                                    <button class="btn btn-secondary btn-lg w-100" disabled>TẠM HẾT HÀNG</button>
+                                ` : `
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="d-flex align-items-center border rounded overflow-hidden">
+                                            <button class="btn btn-light px-3 py-2 border-0" onclick="changeQty(-1)">-</button>
+                                            <input type="text" id="quantityInput" class="form-control qty-input border-0 shadow-none" value="1" readonly>
+                                            <button class="btn btn-light px-3 py-2 border-0" onclick="changeQty(1)">+</button>
+                                        </div>
+                                        <button class="btn btn-youth btn-lg flex-grow-1 py-3 fw-bold" onclick="addThisToCart('${imageUrl}')">
+                                            <i class="fa-solid fa-cart-plus me-2"></i> THÊM VÀO GIỎ HÀNG
+                                        </button>
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        window.changeQty = (change) => {
+            const input = document.getElementById('quantityInput');
+            let val = parseInt(input.value) + change;
+            if (val < 1) val = 1;
+            if (val > currentProduct.stockQuantity) {
+                val = currentProduct.stockQuantity;
+                Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: `Chỉ còn ${currentProduct.stockQuantity} sản phẩm trong kho!`, showConfirmButton: false, timer: 1500 });
+            }
+            input.value = val;
+        };
+
+        window.addThisToCart = (imageUrl) => {
+            const qty = parseInt(document.getElementById('quantityInput').value);
+            const existingItem = cart.find(item => item.id === currentProduct._id);
+
+            if (existingItem) {
+                existingItem.quantity += qty;
+            } else {
+                cart.push({
+                    id: currentProduct._id,
+                    name: currentProduct.name,
+                    price: currentProduct.price,
+                    image: imageUrl,
+                    quantity: qty
+                });
+            }
+
+            localStorage.setItem('YOUTH_SHOP_CART', JSON.stringify(cart));
+            updateCartBadge();
+
+            Swal.fire({
+                toast: true,
+                position: 'bottom-end',
+                icon: 'success',
+                title: `Đã thêm ${qty} sản phẩm vào giỏ`,
+                showConfirmButton: false,
+                timer: 2000
+            });
+        };
+
+        const logout = () => { localStorage.removeItem('YOUTH_SHOP_KEY'); window.location.href = '/key.html'; };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!localStorage.getItem('YOUTH_SHOP_KEY')) { window.location.href = '/key.html'; return; }
+            updateCartBadge();
+            loadProductDetail();
+        });
+    </script>
+</body>
+</html>

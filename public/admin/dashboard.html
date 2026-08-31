@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Thống kê - Admin YOUTH SHOP</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background: #111827;
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar a {
+            color: #9ca3af;
+            text-decoration: none;
+            padding: 12px 20px;
+            display: block;
+            transition: var(--transition);
+            border-radius: 8px;
+            margin: 4px 12px;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 30px;
+        }
+
+        .stat-card {
+            border-left: 4px solid var(--accent-color);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+
+        /* Responsive cho Mobile */
+        @media (max-width: 991.98px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; padding: 15px !important; }
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+
+    <!-- MOBILE NAVBAR HEADER (Chỉ hiện trên điện thoại) -->
+    <nav class="navbar navbar-dark bg-dark d-lg-none px-3 py-2">
+        <button class="btn btn-outline-light btn-sm" onclick="toggleSidebar()">
+            <i class="fa-solid fa-bars fs-5"></i>
+        </button>
+        <span class="navbar-brand fs-6 fw-bold">ADMIN PANEL</span>
+        <button class="btn btn-outline-danger btn-sm" onclick="adminLogout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </nav>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar d-flex flex-column py-4" id="adminSidebar">
+        <div class="d-flex justify-content-between align-items-center px-3 mb-4 d-lg-none">
+            <h4 class="fw-bold tracking-wider mb-0 text-white">MENU</h4>
+            <button class="btn text-white fs-4" onclick="toggleSidebar()">&times;</button>
+        </div>
+        <h4 class="text-center fw-bold mb-4 tracking-wider d-none d-lg-block">ADMIN PANEL</h4>
+        <div class="flex-grow-1">
+            <a href="/admin/dashboard.html" class="active"><i class="fa-solid fa-chart-pie me-2"></i> Dashboard</a>
+            <a href="/admin/orders.html"><i class="fa-solid fa-box-open me-2"></i> Quản lý Đơn hàng</a>
+            <a href="/admin/products.html"><i class="fa-solid fa-shirt me-2"></i> Quản lý Sản phẩm</a>
+            <a href="/admin/categories.html"><i class="fa-solid fa-list me-2"></i> Quản lý Danh mục</a>
+            <a href="/admin/keys.html"><i class="fa-solid fa-key me-2"></i> Quản lý KEY</a>
+            <a href="/admin/customers.html"><i class="fa-solid fa-users me-2"></i> Khách hàng VIP</a>
+            <a href="/admin/top-products.html" ><i class="fa-solid fa-fire me-2"></i> Top Bán chạy</a>
+            <a href="/admin/settings.html"><i class="fa-solid fa-gear me-2"></i> Cài đặt</a>
+        </div>
+        <div class="px-3 d-none d-lg-block">
+            <button class="btn btn-outline-danger w-100 btn-sm" onclick="adminLogout()"><i
+                    class="fa-solid fa-right-from-bracket me-2"></i> Đăng xuất</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <div>
+                <h2 class="fw-bold mb-1 fs-4">Tổng quan hệ thống</h2>
+                <p class="text-muted small mb-0">Thống kê dữ liệu kinh doanh thời gian thực</p>
+            </div>
+            <!-- BỘ LỌC THỜI GIAN (TIMEFRAME FILTER) -->
+            <div class="btn-group shadow-sm overflow-auto" role="group">
+                <button type="button" class="btn btn-outline-dark btn-sm text-nowrap" onclick="changeTimeframe('7days', this)">7 ngày</button>
+                <button type="button" class="btn btn-dark btn-sm active text-nowrap" onclick="changeTimeframe('30days', this)">1 tháng</button>
+                <button type="button" class="btn btn-outline-dark btn-sm text-nowrap" onclick="changeTimeframe('3months', this)">3 tháng</button>
+                <button type="button" class="btn btn-outline-dark btn-sm text-nowrap" onclick="changeTimeframe('1year', this)">1 năm</button>
+                <button type="button" class="btn btn-outline-dark btn-sm text-nowrap" onclick="changeTimeframe('all', this)">Từ trước tới nay</button>
+            </div>
+        </div>
+
+        <!-- CÁC THẺ CARD THỐNG KÊ -->
+        <div class="row g-3 g-md-4 mb-4">
+            <div class="col-md-4">
+                <div class="youth-card p-3 p-md-4 stat-card" style="border-left-color: #10b981;">
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Tổng doanh thu (Đã thanh toán)</div>
+                    <h3 class="fw-bold text-success mb-0 fs-4" id="statRevenue">0 ₫</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="youth-card p-3 p-md-4 stat-card" style="border-left-color: #2563eb;">
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Tổng đơn hàng</div>
+                    <h3 class="fw-bold mb-0 fs-4" id="statTotalOrders">0</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="youth-card p-3 p-md-4 stat-card" style="border-left-color: #f59e0b;">
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Đơn chờ xử lý</div>
+                    <h3 class="fw-bold text-warning mb-0 fs-4" id="statPendingOrders">0</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="youth-card p-3 p-md-4 stat-card" style="border-left-color: #8b5cf6;">
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Tổng sản phẩm trong kho</div>
+                    <h3 class="fw-bold mb-0 fs-4" id="statTotalProducts">0</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="youth-card p-3 p-md-4 stat-card" style="border-left-color: #ef4444;">
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Sản phẩm sắp hết hàng (&lt;=5)</div>
+                    <h3 class="fw-bold text-danger mb-0 fs-4" id="statLowStock">0</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="youth-card p-3 p-md-4 stat-card" style="border-left-color: #06b6d4;">
+                    <div class="text-muted small text-uppercase fw-bold mb-1">Tổng sản phẩm đã bán</div>
+                    <h3 class="fw-bold text-info mb-0 fs-4" id="statTotalSold">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- KHU VỰC BIỂU ĐỒ (CHARTS SECTION) -->
+        <div class="row g-4">
+            <!-- Biểu đồ doanh thu -->
+            <div class="col-lg-6">
+                <div class="youth-card p-3 p-md-4">
+                    <h5 class="fw-bold mb-3 fs-6"><i class="fa-solid fa-chart-line text-success me-2"></i> Biểu đồ Doanh thu (VNĐ)</h5>
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- Biểu đồ đơn hàng -->
+            <div class="col-lg-6">
+                <div class="youth-card p-3 p-md-4">
+                    <h5 class="fw-bold mb-3 fs-6"><i class="fa-solid fa-chart-bar text-primary me-2"></i> Biểu đồ Tổng đơn hàng</h5>
+                    <div class="chart-container">
+                        <canvas id="orderChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        let currentTimeframe = '30days';
+        let revenueChartInstance = null;
+        let orderChartInstance = null;
+
+        const formatMoney = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
+        const checkAdminAuth = () => {
+            const token = localStorage.getItem('ADMIN_TOKEN');
+            if (!token) window.location.href = '/admin/login.html';
+        };
+
+        // Hàm bật/tắt Sidebar trên mobile
+        const toggleSidebar = () => {
+            document.getElementById('adminSidebar').classList.toggle('show');
+        };
+
+        const changeTimeframe = (timeframe, btn) => {
+            currentTimeframe = timeframe;
+            // Đổi active button style
+            document.querySelectorAll('.btn-group button').forEach(b => {
+                b.classList.remove('active', 'btn-dark');
+                b.classList.add('btn-outline-dark');
+            });
+            btn.classList.remove('btn-outline-dark');
+            btn.classList.add('btn-dark', 'active');
+
+            loadDashboardStats();
+        };
+
+        const loadDashboardStats = async () => {
+            try {
+                const token = localStorage.getItem('ADMIN_TOKEN');
+                const res = await fetch(`/api/admin/dashboard?timeframe=${currentTimeframe}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    const data = result.data;
+                    // Cập nhật số liệu Cards
+                    document.getElementById('statRevenue').innerText = formatMoney(data.totalRevenue);
+                    document.getElementById('statTotalOrders').innerText = data.totalOrders;
+                    document.getElementById('statPendingOrders').innerText = data.pendingOrders;
+                    document.getElementById('statTotalProducts').innerText = data.totalProducts;
+                    document.getElementById('statLowStock').innerText = data.lowStockProducts;
+                    document.getElementById('statTotalSold').innerText = data.totalSoldProducts;
+
+                    // Vẽ biểu đồ
+                    renderCharts(data.revenueChartData, data.orderChartData);
+                }
+            } catch (err) {
+                console.error('Lỗi tải thống kê:', err);
+            }
+        };
+
+        const renderCharts = (revenueData, orderData) => {
+            const revLabels = revenueData.map(item => item._id);
+            const revValues = revenueData.map(item => item.dailyRevenue);
+
+            const ordLabels = orderData.map(item => item._id);
+            const ordValues = orderData.map(item => item.totalOrdersDaily);
+
+            // 1. Render Biểu đồ Doanh thu (Line Chart)
+            const ctxRev = document.getElementById('revenueChart').getContext('2d');
+            if (revenueChartInstance) revenueChartInstance.destroy();
+
+            revenueChartInstance = new Chart(ctxRev, {
+                type: 'line',
+                data: {
+                    labels: revLabels.length > 0 ? revLabels : ['Không có dữ liệu'],
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: revValues.length > 0 ? revValues : [0],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: function (value) { return value.toLocaleString() + ' ₫'; } } }
+                    }
+                }
+            });
+
+            // 2. Render Biểu đồ Tổng đơn hàng (Bar Chart)
+            const ctxOrd = document.getElementById('orderChart').getContext('2d');
+            if (orderChartInstance) orderChartInstance.destroy();
+
+            orderChartInstance = new Chart(ctxOrd, {
+                type: 'bar',
+                data: {
+                    labels: ordLabels.length > 0 ? ordLabels : ['Không có dữ liệu'],
+                    datasets: [{
+                        label: 'Số lượng đơn hàng',
+                        data: ordValues.length > 0 ? ordValues : [0],
+                        backgroundColor: '#2563eb',
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        };
+
+        const adminLogout = () => {
+            localStorage.removeItem('ADMIN_TOKEN');
+            window.location.href = '/admin/login.html';
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAdminAuth();
+            loadDashboardStats();
+        });
+    </script>
+</body>
+
+</html>
