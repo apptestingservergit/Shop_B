@@ -65,7 +65,7 @@ const updateKeyStatus = async (req, res) => {
         const updatedKey = await Key.findByIdAndUpdate(
             req.params.id, 
             { status }, 
-            { new: true }
+            { returnDocument: 'after' }
         );
         if (!updatedKey) return res.status(404).json({ success: false, message: 'Không tìm thấy KEY' });
         res.status(200).json({ success: true, message: 'Cập nhật KEY thành công', data: updatedKey });
