@@ -1,9 +1,54 @@
 let cart = JSON.parse(localStorage.getItem('YOUTH_SHOP_CART')) || [];
 let allProducts = []; 
 
+// 0. KIỂM TRA KEY LIVE REAL-TIME (CHỐNG DÙNG TRÁI PHÉP KHI BỊ ADMIN KHÓA)
+const verifyKeyRealtime = async () => {
+    const key = localStorage.getItem('YOUTH_SHOP_KEY');
+    if (!key) {
+        window.location.href = '/key.html';
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/keys/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key })
+        });
+        
+        // Nếu server trả về lỗi (403, 404 nghĩa là key bị khóa hoặc không tồn tại)
+        if (!res.ok) {
+            localStorage.removeItem('YOUTH_SHOP_KEY');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Truy cập bị từ chối',
+                text: 'Mã truy cập (Key) của bạn đã bị quản trị viên vô hiệu hóa hoặc hết hạn!',
+                confirmButtonText: 'Đăng nhập lại',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then(() => {
+                window.location.href = '/key.html';
+            });
+            return;
+        }
+
+        const result = await res.json();
+        if (!result.success) {
+            throw new Error();
+        }
+    } catch (err) {
+        localStorage.removeItem('YOUTH_SHOP_KEY');
+        window.location.href = '/key.html';
+    }
+};
+
 const checkAccess = () => {
     const key = localStorage.getItem('YOUTH_SHOP_KEY');
-    if (!key) window.location.href = '/key.html';
+    if (!key) {
+        window.location.href = '/key.html';
+    } else {
+        verifyKeyRealtime();
+    }
 };
 
 const formatMoney = (amount) => {
@@ -16,10 +61,13 @@ const updateCartBadge = () => {
     if (badge) badge.innerText = totalItems;
 };
 
-// 1. TẢI CÁC NÚT DANH MỤC
+// 1. TẢI CÁC NÚT DANH MỤC (Có gửi kèm x-api-key để bảo mật)
 const loadCategoryTabs = async () => {
     try {
-        const res = await fetch('/api/categories');
+        const key = localStorage.getItem('YOUTH_SHOP_KEY');
+        const res = await fetch('/api/categories', {
+            headers: { 'x-api-key': key }
+        });
         const data = await res.json();
         const tabsContainer = document.getElementById('categoryTabs');
 
@@ -35,15 +83,25 @@ const loadCategoryTabs = async () => {
     }
 };
 
-// 2. LẤY DỮ LIỆU SẢN PHẨM TỪ BACKEND
+// 2. LẤY DỮ LIỆU SẢN PHẨM TỪ BACKEND (Có gửi kèm x-api-key)
 const loadProducts = async () => {
     try {
-        const response = await fetch('/api/products');
+        const key = localStorage.getItem('YOUTH_SHOP_KEY');
+        const response = await fetch('/api/products', {
+            headers: { 'x-api-key': key }
+        });
+        
+        // Nếu bị chặn do key vô hiệu hóa
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('YOUTH_SHOP_KEY');
+            window.location.href = '/key.html';
+            return;
+        }
+
         const data = await response.json();
 
         if (data.success) {
             allProducts = data.data;
-            // TỰ ĐỘNG SẮP XẾP: SẢN PHẨM CÒN HÀNG LÊN TRÊN, HẾT HÀNG ĐẨY XUỐNG CUỐI
             sortAndRenderProducts(allProducts);
         }
     } catch (error) {
@@ -52,19 +110,19 @@ const loadProducts = async () => {
     }
 };
 
-// Hàm sắp xếp chung: Tồn kho > 0 lên trước, tồn kho <= 0 xuống cuối
+// Hàm sắp xếp chung: Tồn kho > 0 lên trước, hết hàng xuống cuối
 const sortAndRenderProducts = (products) => {
     const sorted = [...products].sort((a, b) => {
         const aStock = a.stockQuantity ?? 0;
         const bStock = b.stockQuantity ?? 0;
         const aOut = aStock <= 0 ? 1 : 0;
         const bOut = bStock <= 0 ? 1 : 0;
-        return aOut - bOut; // Sản phẩm còn hàng (0) sẽ đứng trước sản phẩm hết hàng (1)
+        return aOut - bOut; 
     });
     renderProductList(sorted);
 };
 
-// 3. HÀM RENDER DANH SÁCH SẢN PHẨM (RESPONSIVE 2 CỘT MOBILE)
+// 3. HÀM RENDER DANH SÁCH SẢN PHẨM
 const renderProductList = (products) => {
     const productListDiv = document.getElementById('productList');
     if (!productListDiv) return;
@@ -166,4 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCartBadge();
     loadCategoryTabs();
     loadProducts();
+
+    // KIỂM TRA LIVE TRỰC TIẾP MỖI 5 GIÂY (5000ms)
+    setInterval(verifyKeyRealtime, 5000);
 });
